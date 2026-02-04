@@ -40,7 +40,8 @@
         "NSAppleEventsUsageDescription": "DRER controls apps such as Spotify only when you ask it to.",
         "NSRemindersFullAccessUsageDescription": "DRER creates native reminders and timed alerts you request.",
         "NSCalendarsWriteOnlyAccessUsageDescription": "DRER adds events you request to Apple Calendar.",
-        "LSUIElement": true
+        "LSUIElement": true,
+        "NSSpeechRecognitionUsageDescription": "DRER recognizes spoken commands when you enable voice mode."
       },
       "identity": null,
       "icon": "assets/icon.icns",

@@ -10,6 +10,7 @@ const bundle = path.join(root, "native/build/DRERNative.app");
 const contents = path.join(bundle, "Contents");
 const binary = path.join(contents, "MacOS/DRERNative");
 const inputs = [
+  path.join(root, "native/Voice.swift"),
   path.join(root, "native/main.swift"),
   path.join(root, "native/Info.plist"),
 ];
@@ -31,8 +32,13 @@ execFileSync(
   [
     "swiftc",
     path.join(root, "native/main.swift"),
+    path.join(root, "native/Voice.swift"),
     "-o",
     path.join(contents, "MacOS/DRERNative"),
+    "-framework",
+    "Speech",
+    "-framework",
+    "AVFoundation",
     "-framework",
     "EventKit",
     "-framework",

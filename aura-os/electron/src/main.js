@@ -21,7 +21,9 @@ const fs = require("node:fs/promises");
 const { pathToFileURL } = require("node:url");
 const { ActionStore, parseRequest, cleanText } = require("./actions");
 const { nativeRequest } = require("./native");
+const { resolveApplication } = require("./app-match");
 const { queryAI, DEFAULT_MODEL } = require("./ai");
+const { VoiceService } = require("./voice");
 app.setName("DRER");
 app.setPath(
   "userData",
@@ -58,10 +60,24 @@ function handle(channel, fn) {
 function notify(channel, data) {
   if (window && !window.isDestroyed()) window.webContents.send(channel, data);
 }
+const voice = new VoiceService({
+  onState: (state) => notify("voice:state", state),
+  onWake: () => {
+    notify("voice:wake");
+    showWindow();
+  },
+  onCommand: async (question) => {
+    notify("voice:heard", { question });
+    const result = await runRequest({ question, withScreen: false });
+    notify("voice:result", result);
+    return result;
+  },
+});
 async function loadConfig() {
   await fs.mkdir(app.getPath("userData"), { recursive: true, mode: 0o700 });
   try {
     const cfg = JSON.parse(await fs.readFile(configFile(), "utf8"));
+    if (cfg.voice) await voice.configure(cfg.voice);
     encryptedKey =
       typeof cfg.encryptedKey === "string" ? cfg.encryptedKey : null;
     if (typeof cfg.model === "string" && cfg.model.length < 120)
@@ -119,6 +135,7 @@ async function showWindow(settings = false) {
 function config() {
   return {
     hasKey: Boolean(key || encryptedKey),
+    voice: voice.options,
     model,
     platform: process.platform,
     shortcut,
@@ -287,7 +304,10 @@ async function executeAction(action) {
     if (process.platform === "darwin") {
       const result = await nativeRequest({
         operation: "open-app",
-        application: action.application,
+        application: resolveApplication(
+          action.application,
+          (await nativeRequest({ operation: "list-apps" })).applications,
+        ),
       });
       return { kind: action.kind, text: `Opened ${result.application}.` };
     }
@@ -431,7 +451,11 @@ handle("config:save", async (cfg) => {
     const encrypted = await safeStorage.encryptStringAsync(candidate);
     await fs.writeFile(
       configFile(),
-      JSON.stringify({ encryptedKey: encrypted.toString("base64"), model }),
+      JSON.stringify({
+        encryptedKey: encrypted.toString("base64"),
+        model,
+        voice: voice.options,
+      }),
       { mode: 0o600 },
     );
     key = candidate;
@@ -440,12 +464,37 @@ handle("config:save", async (cfg) => {
     try {
       existing = JSON.parse(await fs.readFile(configFile(), "utf8"));
     } catch {}
-    await fs.writeFile(configFile(), JSON.stringify({ ...existing, model }), {
-      mode: 0o600,
-    });
+    await fs.writeFile(
+      configFile(),
+      JSON.stringify({ ...existing, model, voice: voice.options }),
+      {
+        mode: 0o600,
+      },
+    );
   }
   return config();
 });
+handle("voice:configure", async (options) => {
+  await voice.configure(options);
+  let existing = {};
+  try {
+    existing = JSON.parse(await fs.readFile(configFile(), "utf8"));
+  } catch {}
+  await fs.writeFile(
+    configFile(),
+    JSON.stringify({ ...existing, voice: voice.options }),
+    { mode: 0o600 },
+  );
+  return voice.options;
+});
+handle("voice:toggle", (enabled) => {
+  if (typeof enabled !== "boolean") throw new Error("Invalid voice setting.");
+  if (enabled) voice.start();
+  else voice.stop();
+  return { enabled: voice.enabled };
+});
+handle("voice:voices", () => voice.voices());
+handle("voice:preview", () => voice.preview());
 handle("app:open-native", (application) =>
   executeAction({ kind: "open_application", application }),
 );
@@ -603,6 +652,7 @@ app.on("activate", () => {
 app.on("before-quit", () => {
   app.isQuitting = true;
   controller?.abort();
+  voice.stop();
 });
 app.on("will-quit", () => globalShortcut.unregisterAll());
 app.on("window-all-closed", () => {});

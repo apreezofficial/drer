@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require("electron");
 const listeners = new Map();
 contextBridge.exposeInMainWorld("drer", {
+  configureVoice: (value) => ipcRenderer.invoke("voice:configure", value),
+  toggleVoice: (enabled) => ipcRenderer.invoke("voice:toggle", enabled),
+  voices: () => ipcRenderer.invoke("voice:voices"),
+  previewVoice: () => ipcRenderer.invoke("voice:preview"),
   state: () => ipcRenderer.invoke("app:state"),
   request: (payload) => ipcRenderer.invoke("agent:request", payload),
   confirm: (id) => ipcRenderer.invoke("agent:confirm", id),
@@ -17,6 +21,10 @@ contextBridge.exposeInMainWorld("drer", {
   on: (channel, fn) => {
     if (
       ![
+        "voice:state",
+        "voice:wake",
+        "voice:heard",
+        "voice:result",
         "config:ready",
         "nav:settings",
         "app:state",

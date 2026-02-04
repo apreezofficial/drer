@@ -494,3 +494,24 @@ header button {
 .message.test .message-label {
   color: #b8c4a4;
 }
+
+#voice-status {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #b5c3b2;
+  padding: 0 12px;
+}
+#voice-form input:not([type="checkbox"]),
+#voice-form select {
+  display: block;
+  width: 100%;
+  margin: 10px 0 20px;
+  padding: 12px;
+  background: #1d2425;
+  color: #edf0ea;
+  border: 1px solid #46514d;
+  border-radius: 6px;
+}
+#voice-form button {
+  margin: 10px 8px 10px 0;
+}
