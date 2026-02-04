@@ -1,0 +1,23 @@
+# Build output
+build/
+isodir/
+
+# Object files
+*.o
+*.a
+
+# Kernel binaries
+*.elf
+*.bin
+*.iso
+*.img
+
+# Dependency files
+*.d
+*.map
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.DS_Store
