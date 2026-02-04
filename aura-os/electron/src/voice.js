@@ -9,8 +9,25 @@ function voiceSettings(value = {}) {
     throw new Error("Choose a wake name with 2–24 letters.");
   return {
     wakeName,
+    wakeAliases: Array.isArray(value.wakeAliases)
+      ? [
+          ...new Set(
+            value.wakeAliases
+              .filter((x) => typeof x === "string")
+              .map((x) => x.trim())
+              .filter((x) => /^[a-zA-Z][a-zA-Z ]{1,23}$/.test(x)),
+          ),
+        ].slice(0, 8)
+      : [],
     voice: typeof value.voice === "string" ? value.voice.slice(0, 100) : "",
     spokenReplies: value.spokenReplies !== false,
+    preferredName:
+      typeof value.preferredName === "string"
+        ? value.preferredName
+            .trim()
+            .slice(0, 50)
+            .replace(/[\r\n]/g, " ")
+        : "",
   };
 }
 class WakeRouter {
@@ -18,42 +35,38 @@ class WakeRouter {
     this.clock = clock;
     this.setName(name);
   }
-  setName(name) {
+  setName(name, aliases = []) {
     this.name = name.toLowerCase();
+    this.names = [name, ...aliases].map((x) => x.toLowerCase());
     this.until = 0;
   }
   prefix(input) {
     const text = input.trim().replace(/^[.,!? ]+|[.,!? ]+$/g, "");
     const re = new RegExp(
-      "^(?:(?:hey|hi|okay|ok)[, ]+)?" +
-        this.name.replace(/ /g, "\\s+") +
-        "\\b[,!:. ]*",
+      "^(?:(?:hey|hi|okay|ok)[, ]+)?(?:" +
+        this.names
+          .map((name) => name.replace(/ /g, "\\s+"))
+          .sort((a, b) => b.length - a.length)
+          .join("|") +
+        ")\\b[,!:. ]*",
       "i",
     );
     const match = text.match(re);
     return match ? { command: text.slice(match[0].length).trim() } : null;
   }
   accept(input) {
-    const text = input.trim().replace(/^[.,!? ]+|[.,!? ]+$/g, "");
-    const re = new RegExp(
-      "^(?:(?:hey|hi|okay|ok)[, ]+)?" +
-        this.name.replace(/ /g, "\\s+") +
-        "\\b[,!:. ]*",
-      "i",
-    );
-    const match = text.match(re);
+    const match = this.prefix(input);
     if (match) {
       this.until = this.clock() + 12000;
-      const command = text.slice(match[0].length).trim();
-      if (command) {
+      if (match.command) {
         this.until = 0;
-        return { command };
+        return match;
       }
       return { wake: true };
     }
     if (this.clock() < this.until) {
       this.until = 0;
-      return { command: text };
+      return { command: input.trim() };
     }
     return null;
   }
@@ -105,9 +118,12 @@ class VoiceService {
       if (!voices.some((v) => v.name === next.voice))
         throw new Error("Select an installed macOS voice.");
     }
-    const renamed = this.options.wakeName !== next.wakeName;
+    const renamed =
+      this.options.wakeName !== next.wakeName ||
+      JSON.stringify(this.options.wakeAliases) !==
+        JSON.stringify(next.wakeAliases);
     this.options = next;
-    this.router.setName(next.wakeName);
+    this.router.setName(next.wakeName, next.wakeAliases);
     if (renamed && this.enabled) {
       this.stopListener();
       this.acknowledged = false;
@@ -147,10 +163,11 @@ class VoiceService {
       binary,
       ["--listen", "--wake-name", this.options.wakeName],
       {
-        stdio: ["ignore", "pipe", "pipe"],
+        stdio: ["pipe", "pipe", "pipe"],
       },
     );
     this.child = child;
+    child.stdin.on("error", () => {});
     this.status("Requesting microphone and speech access…");
     let buffer = "";
     child.stdout.on("data", (data) => {
@@ -180,10 +197,7 @@ class VoiceService {
           ) {
             this.acknowledged = true;
             this.onWake();
-            this.status("Hmm? Listening for your request…");
-            this.acknowledgement = this.speak("Hmm?").catch((error) =>
-              this.status(error.message),
-            );
+            this.status("I’m listening…");
           }
           if (event.type === "utterance")
             this.heard(event.text).catch((error) => this.status(error.message));
@@ -207,7 +221,11 @@ class VoiceService {
   async speak(text) {
     if (process.platform !== "darwin")
       throw new Error("Speech playback requires macOS.");
-    const args = this.options.voice ? ["-v", this.options.voice] : [];
+    const args = [
+      "-r",
+      "205",
+      ...(this.options.voice ? ["-v", this.options.voice] : []),
+    ];
     await new Promise((resolve, reject) => {
       const child = spawn("/usr/bin/say", args, {
         stdio: ["pipe", "ignore", "pipe"],
@@ -222,33 +240,47 @@ class VoiceService {
       child.stdin.end(String(text).slice(0, 800));
     });
   }
+  greeting() {
+    return (
+      "How can I help you today" +
+      (this.options.preferredName ? ", " + this.options.preferredName : "") +
+      "?"
+    );
+  }
+  pauseListener() {
+    if (this.child && !this.child.stdin.destroyed)
+      this.child.stdin.write('{"muted":true}\n');
+  }
+  resumeListener() {
+    if (this.child && !this.child.stdin.destroyed)
+      this.child.stdin.write('{"muted":false}\n');
+    else this.listen();
+  }
   async preview() {
     if (this.processing) throw new Error("Wait for the current voice request.");
     this.processing = true;
-    this.stopListener();
+    this.pauseListener();
     try {
-      await this.speak(
-        "Hey, I’m " + this.options.wakeName + ". What can I help you do?",
-      );
+      await this.speak(this.greeting());
     } finally {
+      await new Promise((resolve) => setTimeout(resolve, 120));
       this.processing = false;
-      this.listen();
+      this.resumeListener();
     }
   }
   async heard(text) {
     if (!this.enabled || this.processing) return;
-    const wasAcknowledged = this.acknowledged;
     this.acknowledged = false;
     const cleaned = text.replace(/\b(?:hmm|hm|um)\b[?,.! ]*/gi, "");
     const intent = this.router.accept(cleaned);
     if (!intent) return;
     this.processing = true;
-    this.stopListener();
+    this.pauseListener();
     try {
       if (intent.wake) {
         this.onWake();
-        if (!wasAcknowledged) await this.speak("Hmm?");
-        else await this.acknowledgement;
+        await this.speak(this.greeting());
+        this.router.until = this.router.clock() + 12000;
       } else {
         const result = await this.onCommand(intent.command);
         await this.acknowledgement;
@@ -256,8 +288,9 @@ class VoiceService {
           await this.speak(result.text || "Done.");
       }
     } finally {
+      await new Promise((resolve) => setTimeout(resolve, 120));
       this.processing = false;
-      this.listen();
+      this.resumeListener();
     }
   }
 }

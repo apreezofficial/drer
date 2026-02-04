@@ -307,6 +307,8 @@ async function loadVoiceSettings() {
   const cfg = await window.drer.state();
   const options = cfg.voice || {};
   $("wake-name").value = options.wakeName || "Buddy";
+  $("preferred-name").value = options.preferredName || "";
+  $("wake-aliases").value = (options.wakeAliases || []).join(", ");
   $("spoken-replies").checked = options.spokenReplies !== false;
   if (!voiceLoaded) {
     for (const item of await window.drer.voices()) {
@@ -329,6 +331,8 @@ $("voice-form").addEventListener("submit", async (e) => {
   try {
     await window.drer.configureVoice({
       wakeName: $("wake-name").value,
+      preferredName: $("preferred-name").value,
+      wakeAliases: $("wake-aliases").value.split(","),
       voice: $("spoken-voice").value,
       spokenReplies: $("spoken-replies").checked,
     });
