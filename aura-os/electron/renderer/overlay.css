@@ -515,3 +515,19 @@ header button {
 #voice-form button {
   margin: 10px 8px 10px 0;
 }
+
+#mic-level {
+  width: calc(100% - 24px);
+  height: 6px;
+  margin: 0 12px;
+  accent-color: #b5c3b2;
+}
+#heard-speech {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #97a49d;
+  padding: 0 12px;
+  overflow-wrap: anywhere;
+  max-height: 65px;
+  overflow: auto;
+}

@@ -3,6 +3,7 @@ const listeners = new Map();
 contextBridge.exposeInMainWorld("drer", {
   configureVoice: (value) => ipcRenderer.invoke("voice:configure", value),
   toggleVoice: (enabled) => ipcRenderer.invoke("voice:toggle", enabled),
+  voiceDiagnostics: () => ipcRenderer.invoke("voice:diagnostics"),
   voices: () => ipcRenderer.invoke("voice:voices"),
   previewVoice: () => ipcRenderer.invoke("voice:preview"),
   state: () => ipcRenderer.invoke("app:state"),
@@ -21,6 +22,8 @@ contextBridge.exposeInMainWorld("drer", {
   on: (channel, fn) => {
     if (
       ![
+        "voice:meter",
+        "voice:transcript",
         "voice:state",
         "voice:wake",
         "voice:heard",

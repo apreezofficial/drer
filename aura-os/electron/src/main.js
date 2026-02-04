@@ -42,7 +42,8 @@ let window = null,
   controller = null,
   shortcut = "",
   configurationReady = Promise.resolve(),
-  encryptedKey = null;
+  encryptedKey = null,
+  savedVoiceEnabled = false;
 const configFile = () => path.join(app.getPath("userData"), "config.json");
 const trusted = (event) =>
   Boolean(
@@ -61,7 +62,12 @@ function notify(channel, data) {
   if (window && !window.isDestroyed()) window.webContents.send(channel, data);
 }
 const voice = new VoiceService({
-  onState: (state) => notify("voice:state", state),
+  onState: (state) => {
+    notify("voice:state", state);
+    console.info("DRER voice:", state.text);
+  },
+  onMeter: (level) => notify("voice:meter", { level }),
+  onTranscript: (text) => notify("voice:transcript", { text }),
   onWake: () => {
     notify("voice:wake");
     showWindow();
@@ -78,6 +84,7 @@ async function loadConfig() {
   try {
     const cfg = JSON.parse(await fs.readFile(configFile(), "utf8"));
     if (cfg.voice) await voice.configure(cfg.voice);
+    savedVoiceEnabled = cfg.voiceEnabled === true;
     encryptedKey =
       typeof cfg.encryptedKey === "string" ? cfg.encryptedKey : null;
     if (typeof cfg.model === "string" && cfg.model.length < 120)
@@ -455,6 +462,7 @@ handle("config:save", async (cfg) => {
         encryptedKey: encrypted.toString("base64"),
         model,
         voice: voice.options,
+        voiceEnabled: savedVoiceEnabled,
       }),
       { mode: 0o600 },
     );
@@ -487,12 +495,23 @@ handle("voice:configure", async (options) => {
   );
   return voice.options;
 });
-handle("voice:toggle", (enabled) => {
+handle("voice:toggle", async (enabled) => {
   if (typeof enabled !== "boolean") throw new Error("Invalid voice setting.");
   if (enabled) voice.start();
   else voice.stop();
+  savedVoiceEnabled = enabled;
+  let existing = {};
+  try {
+    existing = JSON.parse(await fs.readFile(configFile(), "utf8"));
+  } catch {}
+  await fs.writeFile(
+    configFile(),
+    JSON.stringify({ ...existing, voiceEnabled: enabled }),
+    { mode: 0o600 },
+  );
   return { enabled: voice.enabled };
 });
+handle("voice:diagnostics", () => nativeRequest({ operation: "voice-status" }));
 handle("voice:voices", () => voice.voices());
 handle("voice:preview", () => voice.preview());
 handle("app:open-native", (application) =>
@@ -624,7 +643,11 @@ if (!app.requestSingleInstanceLock()) {
         else if (globalShortcut.register("Alt+Shift+D", () => showWindow()))
           shortcut = "Alt+Shift+D";
       } catch {}
-      configurationReady = loadConfig().then(() => notify("config:ready"));
+      configurationReady = loadConfig().then(() => {
+        notify("config:ready");
+        if (savedVoiceEnabled || process.argv.includes("--voice"))
+          voice.start();
+      });
       await createWindow();
       await createTray();
       const timer = setInterval(
