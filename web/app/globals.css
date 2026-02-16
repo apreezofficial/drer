@@ -4789,3 +4789,5 @@ h1 {
 .feature-introduction[data-wave-active="true"] .feature-orbit {
   animation-play-state: running;
 }
+
+.live-test-video {display:block;width:100%;max-height:760px;object-fit:contain;background:#141719;border:1px solid var(--border);border-radius:24px;}

@@ -1,86 +1,42 @@
-# AuraAI — Desktop Overlay
+# DRER desktop
 
-**Created by [Precious Adedokun](https://preciousadedokun.com.ng) — [auraos.com](https://auraos.com)**
+A desktop assistant with real macOS actions. Close the window to keep DRER in the menu bar; use **⌘⇧Space** to reopen it. Quit from the tray menu. Native Apple Reminders and Calendar records remain saved after DRER quits.
 
-A lightweight Electron app that sits in your system tray and gives you AI-powered screen analysis over any application — press **Win+A+O** from anywhere.
+## Run and install
 
-## What it does
-
-- **Win+A+O** from any app → captures your screen → sends to Groq Vision → shows AI response in a floating overlay
-- The app you're in never sees the keystrokes or knows anything happened
-- Works over browsers, editors, design tools, terminals — everything
-- Overlay disappears on Escape, screen is unchanged
-
-## Use cases
-
-| You see | You ask | You get |
-|---------|---------|---------|
-| Dribbble design | "generate HTML + Tailwind" | Full component code |
-| A bug in your editor | "fix this error" | Explanation + fix |
-| Any UI | "convert to React" | React component |
-| Terminal output | "what does this mean" | Plain English explanation |
-| Anything | (nothing — just Win+A+O) | AI describes what it sees |
-
-## Setup
-
-```bash
-cd aura-os/electron
-npm install
-```
-
-Set your Groq API key (free at [console.groq.com](https://console.groq.com)):
-
-```bash
-# Option 1: environment variable
-export GROQ_API_KEY=gsk_your_key_here
+```sh
+npm ci
 npm start
-
-# Option 2: set it in the app
-npm start
-# → click tray icon → Settings → paste key → Save
+npm run pack:mac
 ```
 
-## Running
+The macOS build is `dist/mac-arm64/DRER.app`. Copy it to Applications. This local build is not notarized for public distribution. Public releases still need signing and notarization.
 
-```bash
-npm start
+## Try it
+
+- `open Mail`, `open Spotify`, `open Google Chrome`: discovers installed applications by name; reports missing or ambiguous matches.
+- `play Spotify music for me`, `pause music`, `next track`: controls Spotify's current queue. Spotify must be installed and signed in; selecting a particular song is not implemented.
+- `remind me in 10 minutes to stretch`, `set a timer for 10s`, `set an alarm at 6:42pm`: creates a timed Apple Reminders alert on macOS. These are Reminders alerts, not Clock app alarms.
+- `Schedule a meeting called Design review tomorrow at 10am for 30 minutes`: saves an event in the default Apple Calendar. Does not invite attendees.
+- `Save a note called Ideas: My next project`: writes a real file in Documents/DRER.
+- `search the web for local-first software`: opens the default browser's search page.
+- `build a habit tracker`: writes a working local starter template, not a custom AI-built application.
+
+## Permissions and AI
+
+Each user grants their own macOS permissions when needed: Reminders, Calendar, Spotify Automation, and Screen Recording. Denied permissions produce errors; DRER does not bypass them. App launching alone does not require access to the contents of those apps. Universal app control, wake-word listening, microphone input, and autonomous browsing are not implemented.
+
+For flexible natural-language requests, open **Settings**, paste your own Groq API key, and save. The key is encrypted using Electron safeStorage in your local DRER profile and decrypted only when an AI request needs it; macOS may show a Keychain prompt. It is never included in the application bundle. Common actions above work without a key. Screen context is sent to Groq only when explicitly selected; screen reading still requires a separate successful permission test.
+
+macOS native actions have been tested locally. Windows/Linux launch targets exist, but equivalent system integrations are not yet implemented or verified.
+
+## Verification
+
+```sh
+npm test
+npm run test:desktop
+# Test an installed build:
+DRER_EXECUTABLE=/Applications/DRER.app/Contents/MacOS/DRER npm run test:desktop
 ```
 
-The app starts silently in the system tray. Press **Win+A+O** to trigger it.
-
-## Building a distributable
-
-```bash
-npm run build        # Windows installer (.exe)
-npm run build:mac    # macOS .dmg
-npm run build:linux  # Linux AppImage
-```
-
-Output goes to `dist/`.
-
-## How the hotkey works
-
-`globalShortcut.register('Super+A+O')` registers the hotkey at the OS level via Electron. When triggered:
-
-1. The overlay hides briefly (so it doesn't appear in the screenshot)
-2. `desktopCapturer` grabs the full screen as a PNG
-3. The image is sent to Groq's `llama-3.2-11b-vision-preview` model
-4. The response is rendered in the overlay with syntax-highlighted code blocks
-5. Press Escape or click ✕ to dismiss
-
-The target application receives none of the keystrokes and has no way to detect the capture.
-
-## Project structure
-
-```
-electron/
-├── src/
-│   ├── main.js       Main process — hotkey, capture, Groq, tray
-│   └── preload.js    Context bridge (main ↔ renderer)
-├── renderer/
-│   ├── overlay.html  Overlay UI
-│   ├── overlay.css   Dark glass styling
-│   └── overlay.js    UI logic + markdown renderer
-├── assets/           Icons (add tray-icon.png here)
-└── package.json
-```
+The desktop integration test exercises the renderer preload/IPC request connection and uses a temporary profile and your locally encrypted configuration, creates actual named test reminders/events, opens Calculator and Mail, calls the live model, records the actual renderer, quits DRER, and verifies reminders from a separate native process. Outputs are in ignored `test-results/native-system`. This test changes native app data; it does not mock successful actions.

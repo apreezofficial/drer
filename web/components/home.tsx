@@ -967,12 +967,24 @@ export default function Home() {
         </section>
         <section
           className="product-section section-container"
-          aria-label="DRER interactive concept preview"
+          aria-label="Recorded DRER macOS integration test"
         >
-          <Demo />
+          <video
+            className="live-test-video"
+            controls
+            playsInline
+            preload="metadata"
+            poster="/media/drer-macos-live-poster.png"
+            aria-label="Actual DRER macOS integration test recording"
+          >
+            <source src="/media/drer-macos-live.mp4" type="video/mp4" />
+            Your browser does not support video playback.
+          </video>
           <p className="demo-caption">
-            Interactive product concepts · voice activation, connected
-            calendars, reminders, routines, and software-building are planned.
+            Recorded macOS integration test · real Apple Reminders, a live AI
+            tool call, Calculator, and Apple Calendar. Native reminders verified
+            after DRER quit. Voice activation and broader automation are still
+            in development.
           </p>
         </section>
         <section

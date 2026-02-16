@@ -105,13 +105,13 @@ export const pages: Record<string, PageData> = {
     title: "Help, right where\nyou are working.",
     eyebrow: "DRER DESKTOP",
     description:
-      "The project’s existing starting point is a screen-aware Electron companion. Invoke it from your desktop, capture the current screen, and get an explanation in a floating overlay.",
-    status: "Existing prototype · Source build",
+      "An installable macOS assistant that opens installed apps, controls Spotify’s current queue, saves native reminders and Calendar events, and writes notes into Documents/DRER.",
+    status: "macOS prototype · Native actions tested",
     visual: "desktop",
     primary: { title: "Set up the prototype", href: "/get-started" },
     sectionTitle: "A small start with useful context.",
     sectionDescription:
-      "The current desktop code lives in aura-os/electron under its original AuraAI name. DRER is the broader direction being built from that foundation.",
+      "DRER lives in aura-os/electron. The recorded macOS test uses real Apple services and a live AI tool call. Each user grants permissions on their own computer.",
     cards: [
       {
         title: "Capture on request",
@@ -128,13 +128,13 @@ export const pages: Record<string, PageData> = {
       {
         title: "Return to your work",
         description:
-          "Read the response in a floating overlay and dismiss it to continue. Voice and computer-control actions are not implemented yet.",
+          "Close the window and reopen it with ⌘⇧Space. Native Apple reminders and Calendar events remain saved after DRER quits. Voice activation and general autonomous computer control remain in development.",
         label: "03 / CONTINUE",
       },
     ],
     closing: "Explore it on your own computer.",
     closingText:
-      "The repository includes Windows, macOS, and Linux build targets. Permissions, packaging, and end-to-end validation still need work on each platform.",
+      "The macOS application has been built and installed locally. Windows and Linux build targets exist; their equivalent native integrations remain unverified.",
   },
   automations: {
     title: "A little less routine.\nA little more room.",
