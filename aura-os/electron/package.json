@@ -1,0 +1,41 @@
+{
+  "name": "aura-ai",
+  "version": "1.0.0",
+  "description": "AuraAI — global screen AI overlay powered by Groq Vision",
+  "author": "Precious Adedokun <hello@preciousadedokun.com.ng>",
+  "homepage": "https://auraos.com",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "groq-sdk": "0.3.3"
+  },
+  "devDependencies": {
+    "electron": "29.1.4",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.auraos.aurai",
+    "productName": "AuraAI",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  }
+}

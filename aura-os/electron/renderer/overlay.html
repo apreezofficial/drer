@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuraAI</title>
+  <link rel="stylesheet" href="overlay.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ── Main view ─────────────────────────────────────────────────── -->
+    <div id="view-main" class="view active">
+
+      <!-- Header -->
+      <div class="header" id="drag-handle">
+        <div class="header-left">
+          <span class="logo">⬡</span>
+          <span class="title">AuraAI</span>
+          <span class="badge">Groq Vision</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="btn-settings" title="Settings">⚙</button>
+          <button class="icon-btn" id="btn-close"    title="Close (Esc)">✕</button>
+        </div>
+      </div>
+
+      <!-- Screenshot preview -->
+      <div class="screenshot-wrap" id="screenshot-wrap">
+        <img id="screenshot-img" src="" alt="Screen capture" />
+        <div class="screenshot-placeholder" id="screenshot-placeholder">
+          <span>⬡</span>
+          <p>Press <kbd>Win+A+O</kbd> to capture your screen</p>
+        </div>
+      </div>
+
+      <!-- Question input -->
+      <div class="input-row">
+        <input
+          type="text"
+          id="question-input"
+          placeholder='Ask anything — "convert this to Tailwind", "explain this error"...'
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button id="btn-send" title="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Response area -->
+      <div class="response-wrap">
+        <!-- Loading state -->
+        <div class="loading" id="loading" style="display:none">
+          <div class="spinner"></div>
+          <span>Analysing screen with Groq Vision...</span>
+        </div>
+
+        <!-- Response content -->
+        <div id="response-content" class="response-content"></div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon">⬡</div>
+          <p>Capture your screen and ask anything.</p>
+          <ul>
+            <li>Open Dribbble → <kbd>Win+A+O</kbd> → "generate HTML + Tailwind"</li>
+            <li>See an error → <kbd>Win+A+O</kbd> → "fix this"</li>
+            <li>Any UI → <kbd>Win+A+O</kbd> → "convert to React components"</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <span class="footer-meta" id="footer-meta">Ready</span>
+        <span class="footer-links">
+          <a href="https://auraos.com" id="link-site">auraos.com</a>
+          ·
+          <a href="https://preciousadedokun.com.ng" id="link-author">Precious Adedokun</a>
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Settings view ─────────────────────────────────────────────── -->
+    <div id="view-settings" class="view">
+      <div class="header" id="drag-handle-settings">
+        <div class="header-left">
+          <span class="logo">⬡</span>
+          <span class="title">Settings</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" id="btn-settings-back">✕</button>
+        </div>
+      </div>
+
+      <div class="settings-body">
+        <div class="setting-group">
+          <label for="key-input">Groq API Key</label>
+          <p class="setting-desc">
+            Get a free key at
+            <a href="https://console.groq.com" id="link-groq">console.groq.com</a>
+          </p>
+          <div class="key-row">
+            <input
+              type="password"
+              id="key-input"
+              placeholder="gsk_..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="btn-toggle-key" class="icon-btn" title="Show/hide">👁</button>
+          </div>
+          <button id="btn-save-key" class="btn-primary">Save Key</button>
+          <p class="setting-status" id="key-status"></p>
+        </div>
+
+        <div class="setting-group">
+          <label>Hotkey</label>
+          <p class="setting-desc">
+            <kbd>Win + A + O</kbd> — works over any application.
+            The app you're in never sees the keystrokes.
+          </p>
+        </div>
+
+        <div class="setting-group">
+          <label>Model</label>
+          <p class="setting-desc">
+            <code>llama-3.2-11b-vision-preview</code> via Groq.<br/>
+            Supports image input — sees your actual screen.
+          </p>
+        </div>
+
+        <div class="setting-group">
+          <label>About</label>
+          <p class="setting-desc">
+            AuraAI v1.0.0<br/>
+            Created by <a href="https://preciousadedokun.com.ng" id="link-author-settings">Precious Adedokun</a><br/>
+            <a href="https://auraos.com" id="link-site-settings">auraos.com</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="overlay.js"></script>
+</body>
+</html>
