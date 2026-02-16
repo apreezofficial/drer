@@ -1,199 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GST 103 Assignment - FUOYE</title>
-    <style>
-        /* General Page Styling */
-        body {
-            background-color: #f0f0f0;
-            font-family: "Times New Roman", Times, serif;
-            color: #000;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* A4 Paper Simulation */
-        .paper {
-            background-color: #fff;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 25mm; /* Standard 1-inch margins */
-            margin: 20px auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            box-sizing: border-box;
-            position: relative;
-        }
-
-        /* Logo Placeholder */
-        .logo-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .logo-placeholder {
-            width: 100px;
-            height: 100px;
-            border: 2px solid #000;
-            display: inline-block;
-            line-height: 100px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        /* Header / Cover Page Styling */
-        .header-section {
-            text-align: center;
-            text-transform: uppercase;
-            margin-bottom: 50px;
-        }
-        .header-section h1 { font-size: 18pt; margin: 5px 0; }
-        .header-section h2 { font-size: 16pt; margin: 5px 0; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 5px; }
-        .header-section h3 { font-size: 14pt; margin: 20px 0; }
-
-        .submission-info {
-            margin-top: 100px;
-            line-height: 2;
-            font-size: 13pt;
-        }
-        .submission-info p { margin: 5px 0; }
-
-        /* Main Content Styling */
-        .content {
-            text-align: justify;
-            line-height: 1.6;
-            font-size: 12pt;
-        }
-        h4 {
-            font-size: 14pt;
-            text-decoration: underline;
-            margin-top: 30px;
-        }
-        .page-break {
-            border-top: 1px dashed #ccc;
-            margin: 40px 0;
-            page-break-after: always; /* Helps when printing to PDF */
-        }
-
-        /* References Section */
-        .references {
-            margin-top: 40px;
-        }
-        .reference-item {
-            padding-left: 40px;
-            text-indent: -40px; /* Hanging indent for APA */
-            margin-bottom: 10px;
-        }
-
-        /* Mobile Friendly Adjustments */
-        @media screen and (max-width: 210mm) {
-            .paper {
-                width: 95%;
-                padding: 15mm;
-            }
-        }
-
-        @media print {
-            body { background: none; }
-            .paper { box-shadow: none; margin: 0; width: 100%; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f7f2">
+  <meta name="description" content="Meet AuraOS: an experimental AI-native x86 operating system and a companion desktop overlay. Explore the architecture, see the workflow, and build from source.">
+  <title>AuraOS — Intelligence, from the inside out.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root{--paper:#f7f7f2;--ink:#22251f;--muted:#72756e;--purple:#7353e7;--line:#dddfd5;--lime:#d6f27c}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:100px}body{margin:0;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button,input,summary{font:inherit}h1,h2,h3,.wordmark{font-family:'Space Grotesk',sans-serif}a,summary,label{ -webkit-tap-highlight-color:transparent}a:focus-visible,summary:focus-visible,input:focus-visible+label{outline:3px solid var(--purple);outline-offset:5px}::selection{background:#dccfff} .wrap{width:min(1200px,calc(100% - 64px));margin:auto}.nav{height:88px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);gap:28px}.brand{display:flex;align-items:center;gap:10px}.wordmark{font-size:25px;letter-spacing:-1.1px;font-weight:700}.brand-mark{width:30px;height:30px;border:7px solid var(--purple);border-radius:50% 50% 34% 34%;position:relative;transform:rotate(-12deg)}.brand-mark:after{content:'';position:absolute;width:8px;height:8px;background:var(--paper);bottom:-8px;left:4px;transform:rotate(45deg)}.navlinks{display:flex;align-items:center;gap:30px;font-size:13px;font-weight:550}.navlinks a:hover,.footer a:hover{color:var(--purple)}.button{display:inline-flex;align-items:center;justify-content:center;gap:18px;min-height:48px;padding:0 22px;border-radius:7px;background:var(--ink);color:white;font-size:13px;font-weight:600;transition:transform .2s,background .2s}.button:hover{background:var(--purple);transform:translateY(-2px)}.button.purple{background:var(--purple)}.button.purple:hover{background:#6040cf}.button.outline{background:transparent;border:1px solid #c7c9bf;color:var(--ink)}.button.outline:hover{background:#eeeee5}.arrow{font-size:19px;font-weight:400}.mobile-menu{display:none}.eyebrow{text-transform:uppercase;letter-spacing:1.7px;font-size:10px;font-weight:650}.pill{display:inline-flex;align-items:center;gap:9px;border:1px solid #dedace;border-radius:100px;padding:7px 12px;font-size:11px;color:#62675b}.dot{width:6px;height:6px;border-radius:50%;background:var(--purple);display:inline-block}.hero{text-align:center;padding:65px 0 0;overflow:hidden}.hero h1{font-size:clamp(48px,6.2vw,83px);font-weight:500;line-height:1.04;letter-spacing:-4.5px;margin:25px auto 22px;max-width:950px}.hero h1 span{color:var(--purple)}.hero-copy{font-size:16px;line-height:1.75;color:#74766e;max-width:510px;margin:0 auto}.hero-actions{display:flex;justify-content:center;gap:12px;margin:27px 0 15px}.hero-note{font-size:10px;color:#8b8d83}.preview-stage{position:relative;margin-top:43px;padding:28px 68px 0;background:#e7e3f1;border:1px solid #ded9ea;border-radius:13px 13px 0 0;text-align:left;isolation:isolate}.preview-stage:before{content:'';position:absolute;inset:0;z-index:-1;background-image:radial-gradient(#a89dbd 1px,transparent 1px);background-size:16px 16px;opacity:.25}.preview-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;font-size:10px;color:#766b8b}.preview-top span:last-child{letter-spacing:1px}.desktop{background:#151720;border:1px solid #44434f;border-bottom:0;border-radius:9px 9px 0 0;box-shadow:0 20px 70px #38254830;overflow:hidden;color:#eceaf5}.windowbar{height:43px;border-bottom:1px solid #33333e;display:flex;align-items:center;justify-content:space-between;padding:0 17px;color:#92919e;font-size:10px}.lights{display:flex;gap:5px}.lights i{width:7px;height:7px;border-radius:50%;background:#555462}.lights i:first-child{background:#ee8b89}.lights i:nth-child(2){background:#e6ca79}.lights i:nth-child(3){background:#9bc892}.workspace{display:grid;grid-template-columns:173px 1fr;min-height:326px}.sidebar{border-right:1px solid #30303b;padding:20px 13px;font-size:10px}.sidebar-title{font-size:9px;letter-spacing:1.4px;color:#6f7180;padding:0 8px 16px}.side-item{display:block;padding:10px 9px;color:#9294a5;margin-bottom:3px;border-radius:4px}.side-item.active{background:#2d283f;color:#c6b6ff}.side-item span{display:inline-block;width:22px;color:#79738e}.sidebar-foot{margin-top:91px;color:#8b8e9c;font-size:9px;padding-left:9px}.sidebar-foot .dot{background:#b9dd85;margin-right:5px;width:5px;height:5px}.demo{padding:22px 28px 25px;min-width:0}.demo-tabs{display:flex;gap:18px;border-bottom:1px solid #33333e;margin-bottom:21px}.demo-tabs label{cursor:pointer;color:#898b9b;font-size:10px;padding-bottom:12px;border-bottom:2px solid transparent}.demo input[type=radio]{position:absolute;width:1px;height:1px;opacity:0}.demo-panel{display:none}.demo:has(#kernel:checked) label[for=kernel],.demo:has(#screen:checked) label[for=screen]{color:#d3c4ff;border-bottom-color:#bda4ff}#kernel:checked~.panel-kernel,#screen:checked~.panel-screen{display:block}.terminal{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px;line-height:1.9;color:#a9acbd}.prompt{color:#c7adff}.terminal .faint{color:#626779}.answer{margin-top:17px;border:1px solid #3c354f;background:#201e2d;border-radius:7px;padding:14px 17px;font-family:'DM Sans',sans-serif;color:#b9b7ca;font-size:11px;line-height:1.8}.answer-head{color:#d8c8ff;font-weight:600;font-size:11px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}.context-chip{font-size:8px;background:#353044;border:1px solid #494059;border-radius:3px;padding:1px 5px;color:#c5b6df}.answer code{color:#d5d8e6}.demo-status{display:flex;justify-content:space-between;margin-top:16px;color:#626779;font-size:8px}.under-preview{display:flex;justify-content:space-between;padding:17px 0 23px;border-bottom:1px solid var(--line);color:#808378;font-size:10px}.under-preview span{display:flex;align-items:center;gap:6px}.section{padding:82px 0;border-bottom:1px solid var(--line)}.section-heading{display:flex;justify-content:space-between;align-items:end;gap:35px;margin-bottom:35px}.section-heading h2{font-size:40px;font-weight:500;letter-spacing:-1.8px;line-height:1.12;margin:13px 0 0}.section-heading>p{max-width:340px;font-size:13px;line-height:1.8;color:var(--muted);margin:0}.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden}.feature{padding:30px;min-height:230px}.feature+.feature{border-left:1px solid var(--line)}.feature-icon{width:35px;height:35px;display:grid;place-items:center;background:#eae4f7;color:var(--purple);border-radius:8px;font-size:21px;margin-bottom:27px}.feature h3{font-size:18px;letter-spacing:-.5px;font-weight:500;margin:0 0 11px}.feature p{font-size:12px;color:var(--muted);line-height:1.8;margin:0}.split{display:grid;grid-template-columns:1fr 1fr;gap:75px;align-items:center}.split h2{font-size:42px;line-height:1.13;letter-spacing:-1.8px;font-weight:500;margin:15px 0 20px}.split p{font-size:13px;line-height:1.9;color:var(--muted);max-width:380px}.text-link{display:inline-flex;gap:18px;font-size:12px;font-weight:600;margin-top:15px}.text-link:hover{color:var(--purple)}.architecture{padding:30px;background:#eceee5;border:1px solid #dce0d1;border-radius:10px}.arch-label{color:#868c7a;font-size:9px;letter-spacing:1.5px;margin-bottom:22px}.arch-row{display:flex;gap:9px}.arch-box{flex:1;background:#f9faf5;border:1px solid #d6dacd;border-radius:5px;padding:16px 10px;text-align:center;font-size:11px}.arch-line{height:24px;width:1px;background:#c2c9b5;margin:auto}.arch-ai{background:var(--lime);border:1px solid #b9d260;border-radius:6px;padding:17px;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}.arch-ai small{font-size:9px;font-weight:400}.arch-note{margin-top:16px;text-align:center;font-family:ui-monospace,monospace;font-size:8px;color:#7b826d}.start{display:grid;grid-template-columns:1fr 1fr;gap:65px;align-items:start}.start>div,.split>div{min-width:0}.start h2{font-size:40px;font-weight:500;letter-spacing:-1.8px;margin:12px 0 18px}.start p{font-size:13px;line-height:1.8;color:var(--muted);max-width:360px}.codebox{background:#22251f;border-radius:8px;padding:23px;color:#e5e8db;overflow:auto}.codebox .eyebrow{color:#9baf85;font-size:9px;margin-bottom:18px}.codebox pre{font-size:11px;line-height:2;margin:0}.codebox .comment{color:#929a85}.setup-note{font-size:10px!important;margin:12px 0 0;max-width:none!important}.faq{max-width:760px;margin:auto}.faq h2{font-size:34px;letter-spacing:-1px;font-weight:500;margin:12px 0 30px}.faq details{border-top:1px solid var(--line);padding:20px 0}.faq details:last-child{border-bottom:1px solid var(--line)}.faq summary{cursor:pointer;font-size:13px;font-weight:550;display:flex;justify-content:space-between;gap:20px;list-style:none}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:'+';font-size:19px;font-weight:400;color:var(--purple);line-height:1}.faq details[open] summary:after{content:'−'}.faq details p{font-size:12px;color:var(--muted);line-height:1.85;max-width:650px;margin:15px 0 0}.faq details a{text-decoration:underline;text-underline-offset:3px}.closing{padding:62px 0;text-align:center;background:#eae4f6;border-radius:10px;margin-top:65px;margin-bottom:50px}.closing h2{font-size:40px;letter-spacing:-1.8px;font-weight:500;margin:14px 0 23px}.footer{display:flex;justify-content:space-between;align-items:center;padding:0 0 30px;font-size:10px;color:#85887d;gap:20px}.footer-links{display:flex;gap:23px}.skip{position:fixed;top:-70px;left:20px;z-index:20;padding:10px;background:var(--ink);color:white}.skip:focus{top:10px}
+    @media(min-width:1500px){.hero{padding-top:80px}}@media(max-width:900px){.wrap{width:calc(100% - 40px)}.navlinks{gap:18px}.hero h1{letter-spacing:-3px}.preview-stage{padding:22px 25px 0}.workspace{grid-template-columns:140px 1fr}.demo{padding:20px}.feature{padding:24px}.split,.start{gap:35px}.split h2{font-size:35px}.section-heading h2{font-size:35px}}
+    @media(max-width:640px){.wrap{width:calc(100% - 36px)}.nav{height:74px;position:relative}.navlinks{display:none}.mobile-menu{display:block}.nav>.button{display:none}.mobile-menu summary{cursor:pointer;font-size:12px;list-style:none;border:1px solid var(--line);border-radius:5px;padding:8px 13px}.mobile-menu nav{position:absolute;right:0;top:65px;padding:14px 20px;z-index:10;display:grid;gap:16px;background:var(--paper);border:1px solid var(--line);border-radius:6px;min-width:190px;font-size:13px;box-shadow:0 12px 24px #22251f12}.hero{padding-top:43px}.pill{font-size:10px}.hero h1{font-size:49px;letter-spacing:-2.7px;margin-top:23px}.hero-copy{font-size:14px;padding:0 5px}.hero-actions{gap:8px}.button{font-size:11px;padding:0 16px;gap:10px;min-height:46px}.hero-note{font-size:9px}.preview-stage{margin-top:34px;padding:15px 11px 0}.preview-top{font-size:8px}.preview-top span:last-child{letter-spacing:0}.windowbar{padding:0 11px;font-size:8px}.workspace{display:block;min-height:340px}.sidebar{display:none}.demo{padding:19px 14px}.terminal{font-size:9px}.answer{padding:12px;font-size:10px}.answer-head{font-size:10px}.context-chip{font-size:7px}.under-preview{font-size:8px;gap:10px}.under-preview span:last-child{display:none}.section{padding:55px 0}.section-heading{display:block;margin-bottom:26px}.section-heading h2{font-size:33px}.section-heading>p{margin-top:20px}.feature-grid{grid-template-columns:1fr}.feature{min-height:0;padding:25px}.feature+.feature{border-left:0;border-top:1px solid var(--line)}.feature-icon{margin-bottom:20px}.split,.start{grid-template-columns:1fr;gap:30px}.split h2,.start>div,.split>div{min-width:0}.start h2{font-size:34px}.architecture{padding:23px}.arch-ai{font-size:11px}.arch-ai small{font-size:8px}.faq h2{font-size:30px}.faq summary{font-size:12px}.closing{margin-top:45px;margin-bottom:30px;padding:43px 18px}.closing h2{font-size:33px}.footer{align-items:start;flex-direction:column;gap:17px}.footer-links{flex-wrap:wrap;gap:18px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+  </style>
 </head>
 <body>
-
-    <div class="paper">
-        <div class="logo-container">
-            <div class="logo-placeholder">FUOYE LOGO</div>
-        </div>
-
-        <div class="header-section">
-            <h1>Federal University Oye-Ekiti (FUOYE) [cite: 1]</h1>
-            <h2>The Library and Information Services [cite: 2]</h2>
-            <h3>Course: GST 103 (Use of Library and ICT) [cite: 3]</h3>
-            
-            <div style="margin-top: 60px;">
-                <strong>Assignment Topic:</strong><br>
-                <span style="font-size: 16pt;">THE ROLE OF UNIVERSITY LIBRARIES IN SUPPORTING UNDERGRADUATE ACADEMIC ACTIVITIES: AN ANALYSIS OF RESOURCES AND CHALLENGES [cite: 7]</span>
-            </div>
-        </div>
-
-        <div class="submission-info">
-            <p><strong>Submitted By:</strong> [cite: 8]</p>
-            <p><strong>Name:</strong> [Insert Your Full Name] [cite: 9]</p>
-            <p><strong>Department:</strong> Computer Science [cite: 10]</p>
-            <p><strong>Matriculation Number:</strong> [Insert Matric Number Here] [cite: 11]</p>
-            <p><strong>Level:</strong> 100 Level</p>
-            <p style="margin-top: 40px;"><strong>Submitted To:</strong> Mrs. Zuwelatu Salisu [cite: 12]</p>
-            <p><strong>Date:</strong> January 23, 2026 [cite: 13]</p>
-        </div>
-
-        <div class="page-break"></div>
-
-        <div class="content">
-            <h4>Introduction</h4>
-            <p>
-                The university library is frequently described as the "intellectual heart" of any higher education institution[cite: 16]. Unlike secondary school libraries, which often serve as mere storehouses for textbooks, the university library is a complex infrastructure designed to support teaching, learning, and research at an advanced level[cite: 17]. Rubin and Rubin (2020) define the modern academic library not just by its physical collection, but by its ability to connect users to a global network of information[cite: 18]. For undergraduate students, particularly those in their first year, the library represents the primary gateway to academic integrity and information literacy[cite: 19]. This essay discusses how university libraries support undergraduate students' academic activities through both print and electronic resources[cite: 20]. Specifically, it critically examines the pivotal roles of library orientation programmes, catalogues, and electronic databases while identifying significant challenges that impede students within the Nigerian university context[cite: 21, 22].
-            </p>
-
-            <h4>The Critical Role of Library Orientation Programmes</h4>
-            <p>
-                The transition from secondary education to the university environment is often characterized by a phenomenon known as "library anxiety"[cite: 24]. New students are frequently overwhelmed by the sheer size of university collections and the complexity of retrieval systems[cite: 25]. According to David-West (2020), library orientation programmes are essential for mitigating this anxiety, serving as a foundational intervention that introduces fresh students to the organizational structure of the library[cite: 26].
-            </p>
-            <p>
-                Orientation is not merely a tour of the building; it is an essential academic intervention[cite: 27]. It bridges the gap between a student's previous limited exposure to information resources and the rigorous demands of university research[cite: 28]. Through orientation, students are introduced to the organizational structure of the library, such as the Library of Congress Classification Scheme (LCCS), which enables them to physically locate materials relevant to their courses[cite: 29]. Critically, orientation programmes transform students from passive receivers of information into active researchers[cite: 30]. Research indicates that students who participate in these programmes demonstrate higher confidence in independent research[cite: 31].
-            </p>
-
-            <h4>The Function of Library Catalogues (OPAC)</h4>
-            <p>
-                The bridge between a student and the information they seek is the library catalogue[cite: 35]. In modern university libraries, this has evolved into the Online Public Access Catalogue (OPAC)[cite: 36]. The catalogue serves as the bibliographic index of the library's entire holding, allowing students to verify the availability, location, and status of resources before they even step into the shelving areas[cite: 37]. 
-            </p>
-            <p>
-                The support provided by the catalogue extends beyond simple location[cite: 38]. It teaches students the skill of "information retrieval" through the use of metadata: Author, Title, and Subject entries[cite: 39]. For a Computer Science student searching for a text on "Python Programming," the catalogue allows them to distinguish between outdated editions and current resources[cite: 40]. However, a critical analysis reveals that the catalogue is only effective if the user possesses the necessary search skills[cite: 41]. As Osaroluka and Okpokwasili (2023) note, university libraries are evolving into complex resource centers, and the OPAC is the key to unlocking these resources[cite: 42].
-            </p>
-
-            <h4>Electronic Databases and E-Resources: A Paradigm Shift</h4>
-            <p>
-                In the 21st century, the physical walls of the library have been transcended by electronic databases[cite: 45]. For undergraduate students, particularly in fast-evolving fields like science and technology, e-resources are arguably the most vital support system the library offers[cite: 46]. Databases such as ScienceDirect, JSTOR, EBSCOhost, and AJOL (African Journals Online) provide access to thousands of peer-reviewed journal articles, conference papers, and e-books[cite: 47]. 
-            </p>
-            <p>
-                The support offered by electronic databases is threefold: currency, accessibility, and depth[cite: 48]. Oyewole and Ogunleye (2022) emphasize that students' willingness to use these resources is often linked to their perceived ease of use and the depth of information available[cite: 49]. Unlike print materials, which are limited by the library's opening hours, electronic databases are available 24/7[cite: 50]. This allows students to continue their research from their hostels or off-campus locations[cite: 51].
-            </p>
-
-            <h4>Challenges Facing Students in the Use of Library Resources</h4>
-            <p>
-                Despite the immense potential of university libraries, several challenges hinder undergraduate students from fully maximizing these benefits[cite: 55]. These challenges are often a combination of infrastructural deficits and personal skill gaps[cite: 56].
-            </p>
-            <ul>
-                <li><strong>Infrastructural Challenges:</strong> Within the Nigerian context, the "digital divide" remains a significant barrier[cite: 57]. The effective use of electronic databases relies heavily on stable power supply and internet connectivity[cite: 58]. Recent studies highlight that infrastructural deficits, such as erratic power supply and poor internet bandwidth, continue to frustrate students attempting to download academic journals[cite: 59].</li>
-                <li><strong>Information Overload:</strong> The sheer volume of information available in databases can be paralyzing[cite: 61]. Without advanced searching skills, a student might get millions of irrelevant results[cite: 62].</li>
-                <li><strong>Lack of Digital Information Literacy:</strong> While many students are "digital natives" regarding social media, they are often "digital immigrants" regarding academic research[cite: 63]. Okeke and Ugwu (2022) argue that a lack of proficient digital skills prevents students from effectively navigating complex database interfaces[cite: 64].</li>
-            </ul>
-
-            <h4>Conclusion</h4>
-            <p>
-                In conclusion, the university library serves as the backbone of undergraduate academic success[cite: 67]. Through orientation programmes, it demystifies the research process; through catalogues, it provides organized access to knowledge; and through electronic databases, it connects students to the global academic community[cite: 68, 69]. However, as highlighted by recent scholarship, the presence of these resources alone does not guarantee success[cite: 70]. The university must address infrastructural challenges, and students must actively engage in information literacy training[cite: 71].
-            </p>
-
-            <div class="references">
-                <h4>References [cite: 73]</h4>
-                <div class="reference-item">
-                    David-West, B. T. (2020). Library orientation and the use of library resources by undergraduate students in Nigerian universities. <i>Journal of Library Services and Technologies, 2</i>(1), 45-56. [cite: 74, 75]
-                </div>
-                <div class="reference-item">
-                    Okeke, I. E., & Ugwu, F. (2022). Digital literacy skills and the use of electronic resources by undergraduates in Nigeria. <i>Library Philosophy and Practice (e-journal)</i>, 6890. [cite: 76, 77]
-                </div>
-                <div class="reference-item">
-                    Osaroluka, O., & Okpokwasili, N. P. (2023). University libraries as resource centres: The role of information and communication technology. <i>Journal of Information and Knowledge Management, 14</i>(2), 112-125. [cite: 78, 79, 80]
-                </div>
-                <div class="reference-item">
-                    Oyewole, O., & Ogunleye, S. (2022). Undergraduate students' utilization of electronic databases in federal universities: A study of perceived ease of use. <i>International Journal of Library Science, 10</i>(3), 55-64. [cite: 81, 82]
-                </div>
-                <div class="reference-item">
-                    Rubin, R. E., & Rubin, R. G. (2020). <i>Foundations of library and information science</i> (5th ed.). ALA Neal-Schuman. [cite: 83, 84]
-                </div>
-            </div>
-        </div>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="wrap">
+    <div class="nav">
+      <a href="#" class="brand" aria-label="AuraOS home"><span class="brand-mark" aria-hidden="true"></span><span class="wordmark">aura<span style="font-weight:400">os</span></span></a>
+      <nav class="navlinks" aria-label="Main navigation">
+        <a href="#possibilities">Possibilities</a><a href="#architecture">Architecture</a><a href="#faq">FAQ</a><a href="https://github.com/apreezofficial/drer" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+      </nav>
+      <a class="button" href="#start">Build from source <span class="arrow" aria-hidden="true">↗</span></a>
+      <details class="mobile-menu"><summary>Menu ☰</summary><nav aria-label="Mobile navigation"><a href="#possibilities">Possibilities</a><a href="#architecture">Architecture</a><a href="#start">Build from source</a><a href="#faq">FAQ</a><a href="https://github.com/apreezofficial/drer">GitHub ↗</a></nav></details>
     </div>
+  </header>
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <div class="pill"><span class="dot"></span> An experiment in AI-native computing <span aria-hidden="true">↗</span></div>
+      <h1 id="hero-title">Intelligence, from<br>the <span>inside out.</span></h1>
+      <p class="hero-copy">An operating system built with AI at its core.<br>And a desktop companion that sees what you see.<br>Meet a more contextual way to compute.</p>
+      <div class="hero-actions"><a href="#start" class="button purple">Explore AuraOS <span class="arrow" aria-hidden="true">↗</span></a><a href="#preview" class="button outline">See it in action <span aria-hidden="true">↓</span></a></div>
+      <p class="hero-note">Experimental project · x86 kernel + Electron companion · Built in the open</p>
+      <div id="preview" class="preview-stage">
+        <div class="preview-top"><span>YOUR SYSTEM. A LITTLE MORE AWARE.</span><span>ILLUSTRATIVE PREVIEW / 01</span></div>
+        <div class="desktop">
+          <div class="windowbar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span>AuraOS — workspace</span><span aria-hidden="true">⌘</span></div>
+          <div class="workspace">
+            <aside class="sidebar" aria-label="Preview context"><div class="sidebar-title">WORKSPACE</div><div class="side-item active"><span>◈</span> Aura assistant</div><div class="side-item"><span>⌘</span> System context</div><div class="side-item"><span>▤</span> Event history</div><div class="sidebar-foot"><span class="dot"></span> Example session</div></aside>
+            <div class="demo">
+              <input type="radio" name="preview" id="kernel" checked><input type="radio" name="preview" id="screen">
+              <div class="demo-tabs"><label for="kernel">01 / Kernel intelligence</label><label for="screen">02 / Screen companion</label></div>
+              <div class="demo-panel panel-kernel">
+                <div class="terminal"><div class="faint">AuraOS / interactive shell</div><div><span class="prompt">aura@os ~ ›</span> ai how does memory work here?</div></div>
+                <div class="answer"><div class="answer-head"><span>✳ &nbsp; A little context goes a long way.</span><span class="context-chip">KERNEL CONTEXT</span></div>The physical memory manager tracks 4 KB frames with a bitmap. The virtual memory manager maps those frames using x86 paging.<br><br>Try <code>meminfo</code> to inspect physical memory, or ask me to explain the page tables.</div>
+                <div class="demo-status"><span>◈ &nbsp; System context included</span><span>Illustrative response</span></div>
+              </div>
+              <div class="demo-panel panel-screen">
+                <div class="terminal"><div class="faint">AuraAI / desktop companion</div><div><span class="prompt">You ›</span> Help me understand this terminal error.</div></div>
+                <div class="answer"><div class="answer-head"><span>✳ &nbsp; Help, right where you are.</span><span class="context-chip">SCREEN CONTEXT</span></div>Use the desktop shortcut to capture your screen and ask about what is visible. Get an explanation in a floating overlay, then press Escape to return to your work.<br><br>Screen captures are sent to Groq for analysis. A configured API key is required.</div>
+                <div class="demo-status"><span>◈ &nbsp; Separate Electron application</span><span>Illustrative workflow</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="under-preview"><span>↓ &nbsp; Built from the kernel up</span><span>C + Assembly &nbsp; / &nbsp; x86 &nbsp; / &nbsp; Groq &nbsp; / &nbsp; Electron</span><span>Designed to be understood ↗</span></div>
+    </section>
+    <section id="possibilities" class="section wrap">
+      <div class="section-heading"><div><div class="eyebrow text-[#7353e7]">01 / A different starting point</div><h2>Less switching.<br>More understanding.</h2></div><p>Explore two sides of the same idea: give AI the context it needs to help you understand the system and the work in front of you.</p></div>
+      <div class="feature-grid">
+        <article class="feature"><div class="feature-icon" aria-hidden="true">◈</div><h3>Context starts at the core.</h3><p>The kernel AI subsystem collects memory statistics, uptime, and recent system activity, bringing system context into your questions.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">⌘</div><h3>Your screen is the starting point.</h3><p>The separate AuraAI desktop overlay captures your screen on request. Ask about an error, a design, or the terminal without leaving your workflow.</p></article>
+        <article class="feature"><div class="feature-icon" aria-hidden="true">↗</div><h3>Open it. Trace it. Build it.</h3><p>Follow the path from bootloader to shell. Read the C and Assembly, inspect the AI layer, and run the experimental kernel in QEMU.</p></article>
+      </div>
+    </section>
+    <section id="architecture" class="section wrap split">
+      <div><div class="eyebrow text-[#7353e7]">02 / Under the surface</div><h2>AI belongs in the<br>conversation.<br>And in the architecture.</h2><p>AuraOS is a 32-bit x86 research project. Its AI core lives alongside the memory manager, interrupts, and drivers, collecting context before handing a question to the inference backend.</p><p>Groq inference runs through a host-side serial proxy. Without an API key, the kernel uses a built-in mock responder.</p><a class="text-link" href="https://github.com/apreezofficial/drer/blob/main/aura-os/docs/architecture.md">Explore the architecture <span aria-hidden="true">↗</span></a></div>
+      <div class="architecture" role="img" aria-label="Shell and system events feed the AI core and context collector, which connect to physical memory, interrupts, and drivers. Groq inference is accessed through a host-side serial proxy."><div class="arch-label">AURAOS / A LOOK INSIDE</div><div class="arch-row"><div class="arch-box">Interactive shell</div><div class="arch-box">System events</div></div><div class="arch-line"></div><div class="arch-ai"><span>✳ &nbsp; AI core</span><small>Context → Query → Response</small></div><div class="arch-line"></div><div class="arch-row"><div class="arch-box">Memory</div><div class="arch-box">Interrupts</div><div class="arch-box">Drivers</div></div><div class="arch-note">SERIAL PROXY ↔ GROQ INFERENCE</div></div>
+    </section>
+    <section id="start" class="section wrap start">
+      <div><div class="eyebrow text-[#7353e7]">03 / Make yourself at home</div><h2>Curiosity is all<br>good code needs.</h2><p>Start with the source. Build the kernel, boot it in QEMU, and ask your first question. The setup guide covers Linux, WSL2, and macOS tooling.</p><a class="button" href="https://github.com/apreezofficial/drer/blob/main/aura-os/docs/run.md">Read the setup guide <span class="arrow" aria-hidden="true">↗</span></a><a class="text-link" style="display:flex" href="https://github.com/apreezofficial/drer/tree/main/aura-os/electron">Looking for the desktop companion? ↗</a></div>
+      <div><div class="codebox"><div class="eyebrow">Terminal / quick start</div><pre><code><span class="comment"># First, install the build prerequisites</span>
+git clone https://github.com/apreezofficial/drer.git
+cd drer/aura-os
 
+<span class="comment"># Build the kernel and launch QEMU</span>
+make
+make run
+
+<span class="comment"># In the AuraOS shell</span>
+ai explain how paging works</code></pre></div><p class="setup-note">Requires NASM, an x86 cross-compiler, and QEMU. See the guide for platform-specific setup and optional Groq configuration.</p></div>
+    </section>
+    <section id="faq" class="section wrap"><div class="faq"><div class="eyebrow text-[#7353e7]">A few things to know</div><h2>A little clarity before you dive in.</h2><details><summary>Is AuraOS ready to replace my everyday operating system?</summary><p>AuraOS is an experimental kernel project for learning and exploration. Run it in QEMU. Features such as a process scheduler, filesystem, and networking stack remain on the roadmap; it is not a complete everyday desktop OS.</p></details><details><summary>How are AuraOS and AuraAI different?</summary><p>AuraOS is the experimental x86 operating system. AuraAI is a separate Electron companion that runs on your existing desktop and provides a screen-aware overlay. You can explore either project independently.</p></details><details><summary>Does my screen stay on my device?</summary><p>The desktop companion sends a captured screenshot to Groq for analysis when you invoke it. It requires your Groq API key. The kernel integration sends collected system context through a host-side serial proxy; it can also run a built-in mock responder without a key.</p></details><details><summary>Can I try the assistant on this page?</summary><p>The preview above is an illustration with switchable views. To run the real kernel or companion, follow the <a href="https://github.com/apreezofficial/drer/blob/main/aura-os/docs/run.md">kernel setup guide</a> or the <a href="https://github.com/apreezofficial/drer/tree/main/aura-os/electron">AuraAI instructions</a>.</p></details></div></section>
+    <section class="closing wrap"><div class="eyebrow text-[#7353e7]">Built in the open. Open to possibility.</div><h2>Get closer to your computer.</h2><a class="button purple" href="https://github.com/apreezofficial/drer">Explore the source <span class="arrow" aria-hidden="true">↗</span></a></section>
+  </main>
+  <footer class="wrap footer"><div class="brand"><span class="brand-mark" style="width:21px;height:21px;border-width:5px" aria-hidden="true"></span><span>AuraOS · Created by <a href="https://preciousadedokun.com.ng">Precious Adedokun</a></span></div><div class="footer-links"><a href="https://github.com/apreezofficial/drer">GitHub ↗</a><a href="https://github.com/apreezofficial/drer/blob/main/aura-os/docs/run.md">Documentation ↗</a><a href="https://kiro.dev/">Design inspiration: Kiro ↗</a></div></footer>
 </body>
 </html>
