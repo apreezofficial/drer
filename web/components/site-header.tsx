@@ -9,10 +9,9 @@ import {
   Search,
   X,
   Menu,
-  Github,
 } from "lucide-react";
 import { DrerMark } from "./brand";
-import { productLinks, resourceLinks, siteLinks, repository } from "@/lib/site";
+import { productLinks, siteLinks } from "@/lib/site";
 export default function SiteHeader() {
   const path = usePathname();
   const [open, setOpen] = useState<string | null>(null),
@@ -23,7 +22,9 @@ export default function SiteHeader() {
     searchTrigger = useRef<HTMLButtonElement>(null),
     menuTrigger = useRef<HTMLButtonElement>(null);
   const productTrigger = useRef<HTMLButtonElement>(null),
-    resourceTrigger = useRef<HTMLButtonElement>(null);
+    resourceTrigger = useRef<HTMLButtonElement>(null),
+    quickTrigger = useRef<HTMLButtonElement>(null);
+  const groupTriggers = useRef<Record<string, HTMLButtonElement | null>>({});
   function close() {
     setOpen(null);
     setMobile(false);
@@ -38,10 +39,11 @@ export default function SiteHeader() {
         setMobile(false);
       }
       if (e.key === "Escape") {
-        if (search) searchTrigger.current?.focus();
+        if (search) quickTrigger.current?.focus();
         else if (mobile) menuTrigger.current?.focus();
         else if (open === "Products") productTrigger.current?.focus();
-        else if (open === "Resources") resourceTrigger.current?.focus();
+        else if (open === "Start") quickTrigger.current?.focus();
+        else if (open) groupTriggers.current[open]?.focus();
         close();
       }
     }
@@ -56,6 +58,24 @@ export default function SiteHeader() {
     };
   }, [mobile, search]);
   const active = (href: string) => path === href;
+  const primaryGroup: Record<string, string[]> = {
+    Products: ["/products", "/desktop", "/auraos", "/build"],
+    "Use cases": ["/automations", "/agent"],
+    Developers: ["/docs", "/resources"],
+    Project: ["/community"],
+  };
+  const developerLinks = siteLinks.filter((item) =>
+    ["/docs", "/build", "/resources"].includes(item.href),
+  );
+  const useCaseLinks = siteLinks.filter((item) =>
+    ["/automations", "/build", "/agent"].includes(item.href),
+  );
+  const projectLinks = siteLinks.filter((item) =>
+    ["/community", "/roadmap", "/auraos"].includes(item.href),
+  );
+  const quickLinks = siteLinks.filter((item) =>
+    ["/get-started", "/desktop", "/platforms", "/docs"].includes(item.href),
+  );
   function group(
     title: string,
     href: string,
@@ -64,7 +84,7 @@ export default function SiteHeader() {
   ) {
     return (
       <div
-        className="xnav-group"
+        className="refnav-group"
         onMouseEnter={() => setOpen(title)}
         onMouseLeave={() => setOpen(null)}
         onBlur={(e) => {
@@ -72,8 +92,8 @@ export default function SiteHeader() {
         }}
       >
         <div
-          className="xnav-group-label"
-          data-active={active(href) || links.some((item) => active(item.href))}
+          className="refnav-group-label"
+          data-active={primaryGroup[title]?.includes(path)}
         >
           <Link
             href={href}
@@ -84,34 +104,45 @@ export default function SiteHeader() {
             {title}
           </Link>
           <button
-            ref={ref}
+            ref={(node) => {
+              ref.current = node;
+              groupTriggers.current[title] = node;
+            }}
             aria-label={`Open ${title.toLowerCase()} menu`}
             aria-controls={`nav-${title}`}
             aria-expanded={open === title}
             onClick={() => setOpen(open === title ? null : title)}
           >
-            <ChevronDown size={12} />
+            <ChevronDown size={15} />
           </button>
         </div>
         {open === title && (
-          <div className="xnav-panel" id={`nav-${title}`}>
-            <div className="xnav-panel-inner">
-              <div className="xnav-panel-intro">
+          <div className="refnav-panel" id={`nav-${title}`}>
+            <div className="refnav-panel-inner">
+              <div className="refnav-panel-intro">
                 <span className="x-eyebrow">
                   {title === "Products"
                     ? "THE DRER ECOSYSTEM"
-                    : "EXPLORE THE PROJECT"}
+                    : title === "Use cases"
+                      ? "EVERYDAY POSSIBILITIES"
+                      : title === "Developers"
+                        ? "BUILD WITH DRER"
+                        : "THE OPEN-SOURCE PROJECT"}
                 </span>
                 <p>
                   {title === "Products"
-                    ? "More ways to put your computer to work."
-                    : "Understand it. Build it. Help shape it."}
+                    ? "An assistant for the computer you already use."
+                    : title === "Use cases"
+                      ? "Plan your day. Build your idea. Make room for more."
+                      : title === "Developers"
+                        ? "Explore the source. Build the next useful piece."
+                        : "A direction we can build together."}
                 </p>
                 <Link href={href} onClick={close}>
                   View overview <ArrowRight size={15} />
                 </Link>
               </div>
-              <div className="xnav-panel-links">
+              <div className="refnav-panel-links">
                 {links.map((item, i) => (
                   <Link
                     key={item.href}
@@ -119,7 +150,7 @@ export default function SiteHeader() {
                     onClick={close}
                     aria-current={active(item.href) ? "page" : undefined}
                   >
-                    <span className="xnav-item-number">0{i + 1}</span>
+                    <span className="refnav-item-number">0{i + 1}</span>
                     <span>
                       {item.title}
                       <small>{item.description}</small>
@@ -136,26 +167,22 @@ export default function SiteHeader() {
   }
   return (
     <>
-      <header className="xnav">
-        <div className="xnav-inner">
+      <header className="refnav">
+        <div className="refnav-inner">
           <Link
             href="/"
-            className="xnav-brand"
+            className="refnav-brand"
             aria-label="DRER home"
             onClick={close}
           >
             <DrerMark />
             <span>DRER</span>
           </Link>
-          <nav className="xnav-desktop" aria-label="Main navigation">
-            <Link
-              href="/agent"
-              onClick={close}
-              aria-current={active("/agent") ? "page" : undefined}
-            >
-              Agent
-            </Link>
+          <nav className="refnav-desktop" aria-label="Main navigation">
             {group("Products", "/products", productLinks, productTrigger)}
+            {group("Use cases", "/automations", useCaseLinks, resourceTrigger)}
+            {group("Developers", "/docs", developerLinks, resourceTrigger)}
+            {group("Project", "/community", projectLinks, resourceTrigger)}
             <Link
               href="/platforms"
               onClick={close}
@@ -164,40 +191,74 @@ export default function SiteHeader() {
               Platforms
             </Link>
             <Link
-              href="/community"
+              href="/roadmap"
               onClick={close}
-              aria-current={active("/community") ? "page" : undefined}
+              aria-current={active("/roadmap") ? "page" : undefined}
             >
-              Community
+              Roadmap
             </Link>
-            {group("Resources", "/resources", resourceLinks, resourceTrigger)}
           </nav>
-          <div className="xnav-actions">
-            <button
-              ref={searchTrigger}
-              className="xnav-icon"
-              aria-label="Search pages"
-              onClick={() => {
-                close();
-                setQuery("");
-                setSearch(true);
+          <div className="refnav-actions">
+            <Link
+              href="/community"
+              className="refnav-secondary"
+              onClick={close}
+            >
+              Contribute
+            </Link>
+            <div
+              className="refnav-split-wrap"
+              onMouseLeave={() => {
+                if (open === "Start") setOpen(null);
+              }}
+              onBlur={(e) => {
+                if (
+                  !e.currentTarget.contains(e.relatedTarget) &&
+                  open === "Start"
+                )
+                  setOpen(null);
               }}
             >
-              <Search size={18} />
-            </button>
-            <a
-              href={repository}
-              className="xnav-github"
-              aria-label="DRER source on GitHub"
-            >
-              <Github size={18} />
-            </a>
-            <Link href="/get-started" className="xnav-cta" onClick={close}>
-              Get started <ArrowUpRight size={14} />
-            </Link>
+              <div className="refnav-split">
+                <Link href="/get-started" onClick={close}>
+                  Get started
+                </Link>
+                <button
+                  ref={quickTrigger}
+                  aria-label="Open get started menu"
+                  aria-expanded={open === "Start"}
+                  aria-controls="nav-start"
+                  onClick={() => setOpen(open === "Start" ? null : "Start")}
+                >
+                  <ChevronDown size={20} />
+                </button>
+              </div>
+              {open === "Start" && (
+                <div className="refnav-quick" id="nav-start">
+                  <span>START EXPLORING DRER</span>
+                  {quickLinks.map((item) => (
+                    <Link key={item.href} href={item.href} onClick={close}>
+                      {item.title}
+                      <ArrowUpRight size={15} />
+                    </Link>
+                  ))}
+                  <button
+                    ref={searchTrigger}
+                    onClick={() => {
+                      close();
+                      setQuery("");
+                      setSearch(true);
+                    }}
+                  >
+                    <Search size={15} />
+                    Search all pages<kbd>⌘ K</kbd>
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               ref={menuTrigger}
-              className="xnav-mobile-toggle xnav-icon"
+              className="refnav-mobile-toggle refnav-icon"
               aria-label={mobile ? "Close navigation" : "Open navigation"}
               aria-expanded={mobile}
               onClick={() => {
@@ -205,25 +266,25 @@ export default function SiteHeader() {
                 setMobile(!mobile);
               }}
             >
-              {mobile ? <X size={21} /> : <Menu size={21} />}
+              {mobile ? <X size={23} /> : <Menu size={23} />}
             </button>
           </div>
         </div>
       </header>
       {open && (
         <button
-          className="xnav-scrim"
+          className="refnav-scrim"
           aria-label="Close navigation dropdown"
           onClick={() => setOpen(null)}
         />
       )}
       {mobile && (
-        <nav className="xnav-mobile" aria-label="Mobile navigation">
-          <div className="xnav-mobile-main">
+        <nav className="refnav-mobile" aria-label="Mobile navigation">
+          <div className="refnav-mobile-main">
             {siteLinks.map((item) => (
               <Link
-                href={item.href}
                 key={item.href}
+                href={item.href}
                 onClick={close}
                 aria-current={active(item.href) ? "page" : undefined}
               >
@@ -232,6 +293,17 @@ export default function SiteHeader() {
               </Link>
             ))}
           </div>
+          <button
+            className="mobile-search"
+            onClick={() => {
+              close();
+              setQuery("");
+              setSearch(true);
+            }}
+          >
+            <Search size={17} />
+            Search all pages
+          </button>
           <p>
             Open source. In development.
             <br />
@@ -244,7 +316,7 @@ export default function SiteHeader() {
           className="xsearch-backdrop"
           onClick={() => {
             setSearch(false);
-            searchTrigger.current?.focus();
+            quickTrigger.current?.focus();
           }}
         >
           <section
@@ -281,11 +353,11 @@ export default function SiteHeader() {
                 onChange={(e) => setQuery(e.target.value)}
               />
               <button
-                className="xnav-icon"
+                className="refnav-icon"
                 aria-label="Close search"
                 onClick={() => {
                   setSearch(false);
-                  searchTrigger.current?.focus();
+                  quickTrigger.current?.focus();
                 }}
               >
                 <X size={19} />
