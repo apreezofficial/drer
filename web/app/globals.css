@@ -3986,3 +3986,806 @@ h1 {
     animation: none;
   }
 }
+
+/* Feature explorer: icon wave, typed introduction, generous two-column product rows. */
+.features {
+  display: block;
+  overflow: clip;
+}
+.feature-introduction {
+  position: relative;
+  padding: 80px 0 100px;
+}
+.feature-orbit-strip {
+  width: 100%;
+  overflow: hidden;
+  padding: 46px 0 42px;
+}
+.feature-orbit-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  transform: translateX(calc(-40px + var(--strip-travel, 0px)));
+  will-change: transform;
+}
+.feature-orbit {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px solid #30343a;
+  background: #15181c;
+  color: #c1c7cd;
+  animation: feature-orbit-wave 7s linear infinite;
+  animation-delay: var(--orbit-delay);
+}
+.feature-orbit svg {
+  width: 31px;
+  height: 31px;
+}
+.feature-orbit:nth-child(4n + 2) {
+  color: #d9bc9c;
+}
+.feature-intro-text {
+  max-width: 1120px;
+  margin: 56px 0 0;
+  font-family: var(--body);
+  font-size: 56px;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  color: #eceeeb;
+}
+.scroll-word {
+  display: inline-block;
+  white-space: pre;
+}
+.scroll-char {
+  opacity: 0.12;
+}
+.scroll-type.has-entered .scroll-char {
+  animation: feature-letter 0.1s ease-out both;
+  animation-delay: var(--char-delay);
+}
+.intro-cursor {
+  display: inline-block;
+  height: 0.88em;
+  width: 2px;
+  background: var(--accent-soft);
+  margin-left: 4px;
+  vertical-align: -0.03em;
+  animation: blink 1s steps(2) infinite;
+}
+.feature-explorer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.features .feature-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  min-height: 0;
+  scroll-margin-top: 100px;
+}
+.features .feature-copy {
+  max-width: 432px;
+  padding: 25px 0;
+}
+.features .feature-kicker {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1.1px;
+  color: #939ba5;
+  margin-bottom: 19px;
+}
+.features .feature-copy h2 {
+  font-family: var(--body);
+  font-size: 42px;
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+  font-weight: 400;
+}
+.features .feature-copy p {
+  font-family: var(--body);
+  font-size: 18px;
+  line-height: 1.42;
+  max-width: 432px;
+  margin-top: 24px;
+  color: #b6bdc5;
+}
+.features .feature-copy .text-link {
+  font-size: 12px;
+  margin-top: 24px;
+}
+.features .feature-art {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  border-radius: 36px;
+  overflow: hidden;
+  border: 1px solid #30343a;
+  container-type: inline-size;
+}
+.feature-voice {
+  background: radial-gradient(ellipse at 50% 30%, #303234, #171a1e 65%);
+}
+.feature-calendar {
+  background: radial-gradient(ellipse at 100% 0%, #303a3e, #1a1e23 70%);
+}
+.feature-build {
+  background: radial-gradient(ellipse at 0% 100%, #35332c, #1c2024 75%);
+}
+.feature-platform {
+  background: radial-gradient(ellipse at 70% 25%, #33393e, #14191e 75%);
+}
+.features .voice-label {
+  font-size: 10px;
+}
+.features .voice-orb {
+  width: 120px;
+  height: 120px;
+  margin-top: 45px;
+  margin-bottom: 30px;
+}
+.features .voice-orb svg {
+  width: 39px;
+  height: 39px;
+}
+.features .voice-wave {
+  height: 90px;
+  gap: 6px;
+}
+.features .voice-wave i {
+  width: 4px;
+}
+.features .voice-visual > p {
+  font-size: 23px;
+  margin-top: 25px;
+}
+.features .voice-visual > span {
+  font-size: 15px;
+  margin-top: 14px;
+}
+.features .calendar-visual {
+  width: 87%;
+  max-width: none;
+}
+.features .calendar-heading {
+  font-size: clamp(10px, 2.6cqw, 16px);
+  gap: 9px;
+}
+.features .concept-tag {
+  font-size: 8px;
+}
+.features .calendar-grid {
+  margin-top: 28px;
+}
+.features .calendar-day {
+  min-height: clamp(135px, 35cqw, 220px);
+}
+.features .calendar-day > span {
+  font-size: 10px;
+  line-height: 34px;
+}
+.features .calendar-event {
+  font-size: clamp(8px, 2cqw, 13px);
+  padding: 10px 6px;
+  margin-top: 22px;
+}
+.features .calendar-event small {
+  font-size: 9px;
+}
+.features .event-1,
+.features .event-3 {
+  margin-top: 60px;
+}
+.features .event-2 {
+  margin-top: 40px;
+}
+.features .event-4 {
+  margin-top: 85px;
+}
+.features .reminder-draft {
+  padding: 19px;
+  font-size: 15px;
+  margin-top: 22px;
+}
+.features .reminder-draft small {
+  font-size: 12px;
+}
+.features .calendar-visual > p {
+  font-size: 12px;
+  margin-top: 24px;
+}
+.features .build-visual {
+  width: 86%;
+  max-width: none;
+  box-shadow: 0 22px 60px #0004;
+}
+.features .build-tabs {
+  padding: 13px 16px;
+}
+.features .build-tabs > span,
+.features .build-tabs button {
+  font-size: 12px;
+}
+.features .habit-preview {
+  min-height: 300px;
+  padding: 35px 28px;
+}
+.features .habit-preview .tiny-label {
+  font-size: 10px;
+}
+.features .habit-preview h4 {
+  font-family: var(--body);
+  font-size: 29px;
+  margin: 12px 0 26px;
+}
+.features .habit-row {
+  padding: 17px 0;
+  font-size: 14px;
+  gap: 10px;
+}
+.features .habit-row > div {
+  gap: 5px;
+}
+.features .habit-row i {
+  width: 21px;
+  height: 21px;
+}
+.features .build-footer {
+  font-size: 10px;
+  padding: 13px 16px;
+}
+.features .build-code {
+  min-height: 300px;
+  padding: 35px 25px;
+  font-size: 13px;
+}
+.features .backend-visual {
+  width: 80%;
+  max-width: none;
+}
+.features .backend-menu {
+  margin-left: 18%;
+  padding: 12px;
+}
+.features .backend-menu > .tiny-label {
+  font-size: 10px;
+  padding: 9px 8px 15px;
+}
+.features .backend-menu > button {
+  padding: 16px 10px;
+  font-size: 16px;
+}
+.features .backend-menu small {
+  font-size: 11px;
+  margin-top: 6px;
+}
+.features .backend-badge {
+  font-size: 9px;
+  padding: 3px 5px;
+}
+.features .backend-composer {
+  font-size: 13px;
+  padding: 24px 16px;
+  gap: 12px;
+}
+.features .backend-status {
+  font-size: 10px;
+  line-height: 1.5;
+  margin-top: 14px;
+}
+.feature-explore-button {
+  font-size: 13px;
+  margin-top: 26px;
+  min-height: 44px;
+}
+.feature-development-note {
+  max-width: 850px;
+  text-align: center;
+  font-family: var(--body);
+  font-size: 11px;
+  line-height: 1.7;
+  color: #8c969f;
+  padding: 38px 0 0;
+}
+@keyframes feature-letter {
+  from {
+    opacity: 0.12;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes feature-orbit-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-30px);
+  }
+  75% {
+    transform: translateY(30px);
+  }
+}
+@media (max-width: 1250px) {
+  .feature-intro-text {
+    font-size: 48px;
+  }
+  .features .feature-row {
+    gap: 40px;
+  }
+  .features .feature-copy {
+    max-width: 370px;
+  }
+  .features .feature-copy h2 {
+    font-size: 38px;
+  }
+  .features .feature-copy p {
+    font-size: 17px;
+  }
+  .features .habit-preview {
+    padding: 28px 22px;
+    min-height: 270px;
+  }
+  .features .habit-preview h4 {
+    font-size: 25px;
+  }
+  .features .habit-row {
+    font-size: 12px;
+  }
+  .features .habit-row i {
+    width: 17px;
+    height: 17px;
+  }
+  .features .build-code {
+    min-height: 270px;
+    font-size: 11px;
+  }
+  .features .backend-menu > button {
+    font-size: 14px;
+  }
+  .features .backend-menu small {
+    font-size: 10px;
+  }
+  .features .backend-composer {
+    font-size: 11px;
+    padding: 20px 13px;
+  }
+  .features .backend-status {
+    font-size: 9px;
+  }
+}
+@media (max-width: 1000px) {
+  .feature-introduction {
+    padding-top: 45px;
+    padding-bottom: 75px;
+  }
+  .feature-orbit {
+    width: 82px;
+    height: 82px;
+  }
+  .feature-orbit-track {
+    gap: 10px;
+  }
+  .feature-intro-text {
+    font-size: 43px;
+    margin-top: 40px;
+  }
+  .features .feature-row {
+    gap: 30px;
+  }
+  .features .feature-copy h2 {
+    font-size: 33px;
+  }
+  .features .feature-copy p {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  .features .feature-art {
+    border-radius: 28px;
+  }
+  .features .voice-orb {
+    width: 85px;
+    height: 85px;
+    margin: 26px auto 20px;
+  }
+  .features .voice-wave {
+    gap: 4px;
+    height: 65px;
+  }
+  .features .voice-wave i {
+    width: 3px;
+  }
+  .features .voice-visual > p {
+    font-size: 17px;
+  }
+  .features .voice-visual > span {
+    font-size: 12px;
+  }
+  .features .calendar-day > span {
+    font-size: 8px;
+    line-height: 27px;
+  }
+  .features .calendar-event {
+    padding: 7px 4px;
+  }
+  .features .calendar-event small {
+    font-size: 7px;
+  }
+  .features .event-1,
+  .features .event-3 {
+    margin-top: 45px;
+  }
+  .features .event-4 {
+    margin-top: 55px;
+  }
+  .features .reminder-draft {
+    padding: 12px;
+    font-size: 11px;
+  }
+  .features .reminder-draft small {
+    font-size: 9px;
+  }
+  .features .calendar-visual > p {
+    font-size: 9px;
+    margin-top: 15px;
+  }
+  .features .build-tabs {
+    padding: 10px;
+  }
+  .features .build-tabs > span,
+  .features .build-tabs button {
+    font-size: 9px;
+  }
+  .features .habit-preview {
+    min-height: 220px;
+    padding: 22px 15px;
+  }
+  .features .habit-preview .tiny-label {
+    font-size: 7px;
+  }
+  .features .habit-preview h4 {
+    font-size: 19px;
+  }
+  .features .habit-row {
+    font-size: 10px;
+    padding: 12px 0;
+  }
+  .features .habit-row > div {
+    gap: 3px;
+  }
+  .features .habit-row i {
+    width: 13px;
+    height: 13px;
+  }
+  .features .build-footer {
+    font-size: 8px;
+    padding: 10px;
+  }
+  .features .build-code {
+    min-height: 220px;
+    font-size: 9px;
+    padding: 25px 15px;
+  }
+  .features .backend-menu {
+    padding: 8px;
+  }
+  .features .backend-menu > .tiny-label {
+    font-size: 8px;
+  }
+  .features .backend-menu > button {
+    font-size: 11px;
+    padding: 11px 7px;
+  }
+  .features .backend-menu small {
+    font-size: 8px;
+  }
+  .features .backend-composer {
+    font-size: 9px;
+    padding: 17px 10px;
+    gap: 5px;
+  }
+  .features .backend-status {
+    font-size: 7px;
+  }
+  .features .backend-badge {
+    font-size: 7px;
+  }
+}
+@media (max-width: 760px) {
+  .feature-introduction {
+    padding: 20px 0 50px;
+  }
+  .feature-orbit-strip {
+    padding: 37px 0 32px;
+  }
+  .feature-orbit {
+    width: 68px;
+    height: 68px;
+  }
+  .feature-orbit svg {
+    width: 24px;
+    height: 24px;
+  }
+  .feature-intro-text {
+    font-size: 36px;
+    line-height: 1.12;
+    margin-top: 28px;
+    letter-spacing: -0.035em;
+  }
+  .feature-explorer {
+    gap: 55px;
+  }
+  .features .feature-row {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .features .feature-copy {
+    max-width: 100%;
+    padding: 0;
+  }
+  .features .feature-copy h2 {
+    font-size: 34px;
+    line-height: 1.1;
+  }
+  .features .feature-copy p {
+    max-width: 100%;
+    font-size: 17px;
+    line-height: 1.45;
+    margin-top: 18px;
+  }
+  .features .feature-kicker {
+    font-size: 8px;
+    margin-bottom: 15px;
+  }
+  .features .feature-copy .text-link {
+    margin-top: 18px;
+  }
+  .features .feature-art {
+    border-radius: 28px;
+  }
+  .features .voice-orb {
+    width: 105px;
+    height: 105px;
+    margin-top: 30px;
+  }
+  .features .voice-visual > p {
+    font-size: 21px;
+  }
+  .features .voice-visual > span {
+    font-size: 14px;
+  }
+  .features .calendar-day {
+    min-height: 35cqw;
+  }
+  .features .calendar-heading {
+    font-size: 13px;
+  }
+  .features .calendar-event {
+    font-size: 10px;
+  }
+  .features .calendar-day > span {
+    font-size: 9px;
+    line-height: 30px;
+  }
+  .features .calendar-event small {
+    font-size: 8px;
+  }
+  .features .reminder-draft {
+    font-size: 13px;
+    padding: 15px;
+  }
+  .features .reminder-draft small {
+    font-size: 10px;
+  }
+  .features .calendar-visual > p {
+    font-size: 10px;
+  }
+  .features .habit-preview {
+    min-height: 270px;
+    padding: 28px 22px;
+  }
+  .features .habit-preview h4 {
+    font-size: 25px;
+  }
+  .features .habit-row {
+    font-size: 12px;
+    padding: 16px 0;
+  }
+  .features .habit-row i {
+    width: 17px;
+    height: 17px;
+  }
+  .features .build-tabs > span,
+  .features .build-tabs button {
+    font-size: 11px;
+  }
+  .features .build-footer {
+    font-size: 9px;
+  }
+  .features .build-code {
+    min-height: 270px;
+    font-size: 11px;
+    padding: 30px 22px;
+  }
+  .features .backend-menu > button {
+    font-size: 14px;
+    padding: 14px 9px;
+  }
+  .features .backend-menu small {
+    font-size: 10px;
+  }
+  .features .backend-menu > .tiny-label {
+    font-size: 9px;
+  }
+  .features .backend-composer {
+    font-size: 11px;
+    padding: 21px 13px;
+  }
+  .features .backend-status {
+    font-size: 9px;
+  }
+  .feature-development-note {
+    padding-top: 30px;
+    font-size: 10px;
+  }
+}
+@media (max-width: 430px) {
+  .feature-intro-text {
+    font-size: 31px;
+  }
+  .features .feature-copy h2 {
+    font-size: 31px;
+  }
+  .features .feature-copy p {
+    font-size: 16px;
+  }
+  .features .feature-art {
+    border-radius: 24px;
+  }
+  .features .voice-label {
+    font-size: 8px;
+  }
+  .features .voice-orb {
+    width: 78px;
+    height: 78px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+  }
+  .features .voice-orb svg {
+    width: 28px;
+  }
+  .features .voice-wave {
+    gap: 3px;
+  }
+  .features .voice-visual > p {
+    font-size: 16px;
+    margin-top: 18px;
+  }
+  .features .voice-visual > span {
+    font-size: 11px;
+  }
+  .features .calendar-heading {
+    font-size: 9px;
+    gap: 6px;
+  }
+  .features .concept-tag {
+    font-size: 6px;
+  }
+  .features .calendar-grid {
+    margin-top: 20px;
+  }
+  .features .calendar-day {
+    min-height: 118px;
+  }
+  .features .calendar-day > span {
+    font-size: 7px;
+    line-height: 25px;
+  }
+  .features .calendar-event {
+    font-size: 7px;
+    padding: 5px 3px;
+  }
+  .features .calendar-event small {
+    font-size: 6px;
+  }
+  .features .event-1,
+  .features .event-3 {
+    margin-top: 35px;
+  }
+  .features .event-4 {
+    margin-top: 45px;
+  }
+  .features .reminder-draft {
+    font-size: 10px;
+    padding: 11px;
+    margin-top: 15px;
+  }
+  .features .reminder-draft small {
+    font-size: 8px;
+  }
+  .features .calendar-visual > p {
+    font-size: 8px;
+  }
+  .features .habit-preview {
+    min-height: 205px;
+    padding: 20px 14px;
+  }
+  .features .habit-preview h4 {
+    font-size: 18px;
+    margin-bottom: 17px;
+  }
+  .features .habit-row {
+    font-size: 9px;
+    padding: 12px 0;
+  }
+  .features .habit-row i {
+    width: 13px;
+    height: 13px;
+  }
+  .features .build-tabs > span,
+  .features .build-tabs button {
+    font-size: 8px;
+  }
+  .features .build-code {
+    min-height: 205px;
+    font-size: 8px;
+    padding: 24px 13px;
+  }
+  .features .build-footer {
+    font-size: 7px;
+  }
+  .features .backend-menu > .tiny-label {
+    font-size: 7px;
+    padding: 5px 6px 10px;
+  }
+  .features .backend-menu > button {
+    font-size: 10px;
+    padding: 10px 7px;
+  }
+  .features .backend-menu small {
+    font-size: 7px;
+  }
+  .features .backend-composer {
+    font-size: 8px;
+    padding: 16px 10px;
+  }
+  .features .backend-status {
+    font-size: 7px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feature-orbit {
+    animation: none;
+  }
+  .feature-orbit-track {
+    transform: translateX(-40px);
+    will-change: auto;
+  }
+  .scroll-char {
+    opacity: 1;
+  }
+  .scroll-type.has-entered .scroll-char {
+    animation: none;
+    opacity: 1;
+  }
+  .intro-cursor {
+    animation: none;
+  }
+}
+
+.feature-orbit {
+  animation-play-state: paused;
+}
+.feature-introduction[data-wave-active="true"] .feature-orbit {
+  animation-play-state: running;
+}
