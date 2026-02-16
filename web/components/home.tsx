@@ -19,6 +19,10 @@ import {
   Menu,
   Monitor,
   Mic,
+  CalendarDays,
+  Bell,
+  WandSparkles,
+  Repeat2,
   MousePointer2,
   FolderOpen,
   AppWindow,
@@ -110,7 +114,7 @@ function CopyCommand({ compact = false }: { compact?: boolean }) {
   );
 }
 function AnimatedTitle() {
-  const text = "Your computer. Now with an agent.";
+  const text = "Say what you need. Let DRER take it from there.";
   let offset = 0;
   return (
     <h1 aria-label={text}>
@@ -141,7 +145,7 @@ function AnimatedTitle() {
 const searchItems = [
   {
     title: "DRER desktop assistant",
-    description: "Screen understanding and the desktop prototype",
+    description: "Voice, connected tools, and the desktop prototype",
     href: overlay,
   },
   {
@@ -151,8 +155,24 @@ const searchItems = [
   },
   {
     title: "Agent roadmap",
-    description: "Voice, desktop actions, and multi-step workflows",
+    description:
+      "Wake phrase, calendars, reminders, automations, and building apps",
     href: "#roadmap",
+  },
+  {
+    title: "Calendars and reminders",
+    description: "Plan your week and follow up on what matters",
+    href: "#calendar",
+  },
+  {
+    title: "Vibe-build with DRER",
+    description: "Describe an app, preview it, and refine it",
+    href: "#build",
+  },
+  {
+    title: "Recurring automations",
+    description: "Daily briefings and routines across connected tools",
+    href: "#calendar",
   },
   {
     title: "AuraOS research kernel",
@@ -312,6 +332,8 @@ function Header() {
             ["Desktop companion", "#companion"],
             ["Windows, macOS, Linux", "#platforms"],
             ["Roadmap", "#roadmap"],
+            ["Calendars & routines", "#calendar"],
+            ["Vibe-building", "#build"],
             ["AuraOS", "#auraos"],
             ["Documentation", docs],
             ["Get started", "#get-started"],
@@ -390,7 +412,7 @@ function Header() {
                     .includes(query.toLowerCase()),
                 )
                 .map((x) => (
-                  <a href={x.href} key={x.title}>
+                  <a href={x.href} key={x.title} onClick={closeSearch}>
                     <FileCode2 size={20} />
                     <div>
                       {x.title}
@@ -414,53 +436,170 @@ function Header() {
     </>
   );
 }
-const terminalLines = [
-  ["you › help me with what’s on my screen", "command"],
-  ["", ""],
-  ["✳ DRER / illustrative agent session", "accent"],
-  ["  ✓ Read the visible context", "success"],
-  ["  ✓ Understand the request", "success"],
-  ["  → Suggest the next step", "accent"],
-  ["", ""],
-  ["  This error points to a missing package.", ""],
-  ["  I can explain the fix and help you", ""],
-  ["  work through it, right here.", ""],
-  ["", ""],
-  ["  See → Understand → Plan → Act", "accent"],
-  ["  Desktop actions & voice: on the roadmap", "muted"],
+const demoScenarios = [
+  {
+    id: "calendar",
+    label: "Plan my week",
+    Icon: CalendarDays,
+    title: "Make room for what matters.",
+    utterance: "Hey DRER, plan my week around my meetings.",
+    reply:
+      "Here is a proposed schedule: keep your existing meetings, add two focus blocks, and set a reminder before your deadline. Review it before anything is added.",
+    context: "calendar / proposed week",
+    steps: [
+      "Check connected calendar availability",
+      "Suggest focus time around meetings",
+      "Review events and reminders",
+    ],
+    terminal: [
+      "you › Hey DRER, help me plan my week",
+      "✳ DRER / concept session",
+      "  → Check calendar availability",
+      "  → Find two open focus blocks",
+      "  → Prepare a deadline reminder",
+      "",
+      "  A calmer week, ready for your review.",
+      "",
+      "Calendar integration: planned",
+    ],
+  },
+  {
+    id: "reminders",
+    label: "Remind me",
+    Icon: Bell,
+    title: "A thought now. A nudge later.",
+    utterance: "DRER, remind me to submit this tomorrow at 9.",
+    reply:
+      "The idea is simple: tell DRER what to remember, when to remind you, and where it fits. Here is a reminder draft for tomorrow morning.",
+    context: "reminders / draft",
+    steps: [
+      "Submit the project",
+      "Tomorrow · 09:00 · your time zone",
+      "Confirm to save the reminder",
+    ],
+    terminal: [
+      "you › Remind me tomorrow at 9",
+      "✳ DRER / reminder concept",
+      "  → Capture what you want to remember",
+      "  → Resolve the date and your time zone",
+      "  → Prepare the reminder",
+      "",
+      "  Submit the project · tomorrow · 09:00",
+      "",
+      "Reminder integration: planned",
+    ],
+  },
+  {
+    id: "build",
+    label: "Build an app",
+    Icon: WandSparkles,
+    title: "An idea you can build on.",
+    utterance: "Hey DRER, build me a habit tracker.",
+    reply:
+      "Start with a simple app: daily habits, a weekly progress view, and a clean interface. Then preview the result and tell DRER what you want to change.",
+    context: "habit-tracker / proposed build",
+    steps: [
+      "Plan the screens and data",
+      "Create a working first version",
+      "Preview, check, and refine together",
+    ],
+    terminal: [
+      "you › Build me a habit tracker",
+      "✳ DRER / vibe-build concept",
+      "  → Plan the interface",
+      "  → Create the project files",
+      "  → Prepare a preview",
+      "",
+      "  Your next instruction: make it yours.",
+      "",
+      "Software-building tools: planned",
+    ],
+  },
+  {
+    id: "routines",
+    label: "Run a routine",
+    Icon: Repeat2,
+    title: "Ask once. Make it a routine.",
+    utterance: "Every weekday, show my calendar and priorities.",
+    reply:
+      "A proposed morning routine: gather today’s meetings, include upcoming reminders, and prepare a short briefing. Choose when it runs and which tools it can use.",
+    context: "routines / morning briefing",
+    steps: [
+      "Weekdays · 08:30 · your time zone",
+      "Calendar + reminders + priorities",
+      "Review the routine before enabling",
+    ],
+    terminal: [
+      "you › Set up my morning briefing",
+      "✳ DRER / automation concept",
+      "  → Gather the calendar and reminders",
+      "  → Summarize today’s priorities",
+      "  → Schedule a weekday briefing",
+      "",
+      "  A routine you can review and pause.",
+      "",
+      "Recurring automation: planned",
+    ],
+  },
+  {
+    id: "screen",
+    label: "Understand my screen",
+    Icon: Monitor,
+    title: "A second pair of eyes.",
+    utterance: "DRER, explain the error on my screen.",
+    reply:
+      "That message points to a missing dependency. The existing screen-aware prototype can explain what you are looking at without making you retype the error.",
+    context: "desktop / captured context",
+    steps: [
+      "Capture a screen on request",
+      "Send the image to Groq for analysis",
+      "Read the explanation in the overlay",
+    ],
+    terminal: [
+      "you › Explain this error",
+      "✳ DRER / screen-aware prototype",
+      "  → Capture the shared screen",
+      "  → Analyze the visible context",
+      "  → Explain a useful next step",
+      "",
+      "  A little context makes a difference.",
+      "",
+      "Explore the prototype from source",
+    ],
+  },
 ];
-
-function Demo({ small = false }: { small?: boolean }) {
-  const [active, setActive] = useState<"tasks" | "screen">("screen");
+function Demo() {
+  const [active, setActive] = useState("calendar");
+  const scenario = demoScenarios.find((x) => x.id === active)!;
   const [playing, setPlaying] = useState(true);
   const [line, setLine] = useState(1);
   const demoRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([e]) => setVisible(e.isIntersecting),
-      { threshold: 0.1 },
-    );
-    if (demoRef.current) observer.observe(demoRef.current);
-    return () => observer.disconnect();
+    const o = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), {
+      threshold: 0.1,
+    });
+    if (demoRef.current) o.observe(demoRef.current);
+    return () => o.disconnect();
   }, []);
   useEffect(() => {
     if (!playing || !visible) return;
-    const reduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduce) {
-      setLine(terminalLines.length);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setLine(scenario.terminal.length);
       return;
     }
-    const timer = setInterval(
-      () => setLine((v) => (v >= terminalLines.length ? 1 : v + 1)),
-      line >= terminalLines.length ? 5000 : 650,
+    const timer = setTimeout(
+      () => setLine((v) => (v >= scenario.terminal.length ? 1 : v + 1)),
+      line >= scenario.terminal.length ? 5000 : 850,
     );
-    return () => clearInterval(timer);
-  }, [playing, visible, line]);
+    return () => clearTimeout(timer);
+  }, [playing, visible, line, scenario]);
+  function choose(id: string) {
+    setActive(id);
+    setLine(1);
+  }
   return (
-    <div className={`demo-scene ${small ? "demo-small" : ""}`} ref={demoRef}>
+    <div className="demo-scene" ref={demoRef}>
       <div className="os-window">
         <div className="os-topbar">
           <div className="window-dots">
@@ -472,7 +611,7 @@ function Demo({ small = false }: { small?: boolean }) {
             <DrerMark /> DRER workspace
           </span>
           <span className="os-top-right">
-            <span className="online-dot" /> Concept preview
+            <span className="online-dot" /> Product concept
           </span>
         </div>
         <div className="os-body">
@@ -480,29 +619,18 @@ function Demo({ small = false }: { small?: boolean }) {
             <div className="os-brand">
               <DrerMark /> drer
             </div>
-            <div className="sidebar-caption">YOUR WORKSPACE</div>
-            <button
-              className={active === "tasks" ? "selected" : ""}
-              onClick={() => setActive("tasks")}
-            >
-              <Layers3 size={15} /> Task planner
-            </button>
-            <button
-              className={active === "screen" ? "selected" : ""}
-              onClick={() => setActive("screen")}
-            >
-              <Monitor size={15} /> Screen context
-            </button>
-            <div className="sidebar-caption second">SYSTEM</div>
-            <span>
-              <Cpu size={14} /> Connected apps
-            </span>
-            <span>
-              <Layers3 size={14} /> Files & folders
-            </span>
-            <span>
-              <GitBranch size={14} /> Voice & text
-            </span>
+            <div className="sidebar-caption">JUST ASK DRER</div>
+            {demoScenarios.map(({ id, label, Icon }) => (
+              <button
+                key={id}
+                className={active === id ? "selected" : ""}
+                aria-pressed={active === id}
+                onClick={() => choose(id)}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            ))}
             <div className="sidebar-bottom">
               <span className="online-dot" /> Open source · in development
               <br />
@@ -511,89 +639,58 @@ function Demo({ small = false }: { small?: boolean }) {
           </aside>
           <div className="os-conversation">
             <div className="conversation-bar">
-              <span>
-                {active === "tasks" ? "Task planning" : "Screen understanding"}
-              </span>
-              <span>✳</span>
+              <span>{scenario.label}</span>
+              <Mic size={13} />
             </div>
             <div className="conversation-scroll">
-              <div className="conversation-eyebrow">
-                CONTEXT MAKES THE DIFFERENCE
-              </div>
-              <h3>
-                {active === "tasks"
-                  ? "A little help. All the way through."
-                  : "A second pair of eyes."}
-              </h3>
-              <div className="user-message">
-                {active === "tasks"
-                  ? "Help me organize the notes for this project."
-                  : "Can you explain the error on my screen?"}
-              </div>
+              <div className="conversation-eyebrow">A LITTLE LESS FRICTION</div>
+              <h3>{scenario.title}</h3>
+              <div className="user-message">{scenario.utterance}</div>
               <div className="assistant-label">
-                <DrerMark /> DRER <span>with context</span>
+                <DrerMark /> DRER{" "}
+                <span>{active === "screen" ? "prototype" : "concept"}</span>
               </div>
-              <p>
-                {active === "tasks"
-                  ? "Start with a plan: find the relevant notes, group the useful information, then review the result before saving it. This previews the agent workflow we are building."
-                  : "That message points to a missing dependency. The screen-aware prototype can help explain what you are looking at, without making you retype the error."}
-              </p>
+              <p>{scenario.reply}</p>
               <div className="inline-code">
-                <span>
-                  {active === "tasks"
-                    ? "project / suggested plan"
-                    : "desktop / captured context"}
-                </span>
+                <span>{scenario.context}</span>
                 <code>
-                  {active === "tasks" ? (
-                    <>
-                      <b>01</b> Find the project notes
-                      <br />
-                      <b>02</b> Group, summarize, and review
-                      <br />
-                      <em>// Planned workflow · review before saving.</em>
-                    </>
-                  ) : (
-                    <>
-                      <b>capture</b> → screenshot
-                      <br />
-                      <b>analyze</b> → Groq Vision
-                      <br />
-                      <em>// Ask about the work in front of you.</em>
-                    </>
-                  )}
+                  {scenario.steps.map((step, i) => (
+                    <div key={step}>
+                      <b>0{i + 1}</b> {step}
+                    </div>
+                  ))}
                 </code>
               </div>
               <div className="context-pills">
-                <span>✓ Screen context</span>
                 <span>✓ Your request</span>
-                <span>✓ Next steps</span>
+                <span>✓ A clear plan</span>
+                <span>✓ You decide</span>
               </div>
             </div>
             <div className="composer">
-              Ask about anything on your screen...<span>↑</span>
+              Say it, type it, or bring in context...<span>↑</span>
             </div>
           </div>
           <aside className="context-panel">
             <div>
-              YOUR COMPUTER <Cpu size={13} />
+              CONNECTED POSSIBILITIES <Sparkles size={13} />
             </div>
             <p>
-              A familiar desktop
+              One conversation.
               <br />
-              <span>with a new kind of help.</span>
+              <span>More ways to get things done.</span>
             </p>
             <div className="stat-row">
-              <span>Windows</span>
-              <b>Build target</b>
+              <span>Calendar</span>
+              <b>Plan</b>
             </div>
             <div className="stat-row">
-              <span>macOS</span>
-              <b>Build target</b>
+              <span>Reminders</span>
+              <b>Remember</b>
             </div>
             <div className="stat-row">
-              <span>Linux</span>
-              <b>Build target</b>
+              <span>Apps & files</span>
+              <b>Create</b>
             </div>
             <div className="context-graph">
               {Array.from({ length: 28 }, (_, i) => (
@@ -617,7 +714,7 @@ function Demo({ small = false }: { small?: boolean }) {
             <i />
             <i />
           </div>
-          <span>DRER — agent session</span>
+          <span>DRER — {scenario.label.toLowerCase()}</span>
           <button
             onClick={() => setPlaying(!playing)}
             aria-label={playing ? "Pause terminal demo" : "Play terminal demo"}
@@ -627,10 +724,23 @@ function Demo({ small = false }: { small?: boolean }) {
         </div>
         <div
           className="terminal-content"
-          aria-label="Animated illustrative DRER agent session"
+          aria-label="Illustrative DRER workflow"
         >
-          {terminalLines.slice(0, line).map(([text, kind], i) => (
-            <div key={i} className={kind}>
+          {scenario.terminal.slice(0, line).map((text, i) => (
+            <div
+              key={`${active}-${i}`}
+              className={
+                i === 0
+                  ? "command"
+                  : i === 1
+                    ? "accent"
+                    : text.includes("→")
+                      ? "success"
+                      : text.includes("planned")
+                        ? "muted"
+                        : ""
+              }
+            >
               {text || "\u00a0"}
             </div>
           ))}
@@ -640,118 +750,128 @@ function Demo({ small = false }: { small?: boolean }) {
     </div>
   );
 }
-function PlanVisual() {
+function VoiceVisual() {
   return (
-    <div className="kernel-visual">
-      <div className="mini-tabs">
-        <span>Context</span>
-        <span>Plan</span>
-        <span className="active">Steps</span>
-        <span className="tag">CONCEPT</span>
+    <div className="voice-visual">
+      <div className="voice-label">
+        <span className="development-dot" /> VOICE ACTIVATION · CONCEPT
       </div>
-      <div className="kernel-task">
+      <div className="voice-orb">
+        <Mic size={30} />
+      </div>
+      <div className="voice-wave">
+        {Array.from({ length: 35 }, (_, i) => (
+          <i
+            key={i}
+            style={{
+              height: `${12 + ((i * 29) % 45)}px`,
+              animationDelay: `${i * 45}ms`,
+            }}
+          />
+        ))}
+      </div>
+      <p>“Hey DRER, plan my day.”</p>
+      <span>Your voice. A place to begin.</span>
+    </div>
+  );
+}
+function CalendarVisual() {
+  return (
+    <div className="calendar-visual">
+      <div className="calendar-heading">
+        <CalendarDays size={17} />
+        <span>Your week, with room to breathe.</span>
+        <span className="concept-tag">CONCEPT</span>
+      </div>
+      <div className="calendar-grid">
+        {["MON", "TUE", "WED", "THU", "FRI"].map((day, i) => (
+          <div className="calendar-day" key={day}>
+            <span>{day}</span>
+            <div className={`calendar-event event-${i}`}>
+              <span>
+                {
+                  [
+                    "Team sync",
+                    "Focus time",
+                    "Design review",
+                    "Focus time",
+                    "Weekly recap",
+                  ][i]
+                }
+              </span>
+              <small>{["10:00", "09:00", "11:30", "14:00", "16:00"][i]}</small>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="reminder-draft">
+        <Bell size={16} />
+        <span>
+          Submit the project<small>Tomorrow at 09:00 · reminder draft</small>
+        </span>
         <Check size={14} />
-        <span>1. Understand the request</span>
       </div>
-      <div className="task-tree">
-        {[
-          "Read the screen you share",
-          "Keep your question in context",
-          "Break the task into clear steps",
-        ].map((x) => (
-          <div key={x}>
-            <span>✓</span>
-            {x}
-          </div>
-        ))}
-      </div>
-      <div className="kernel-task">
-        <MousePointer2 size={14} />
-        <span>2. Help you follow through</span>
-      </div>
-      <div className="task-tree">
-        {[
-          "Find the right app or file",
-          "Preview the proposed action",
-          "Review the result together",
-        ].map((x) => (
-          <div key={x}>
-            <span>→</span>
-            {x}
-          </div>
-        ))}
-      </div>
-      <div className="plan-footnote">
-        Multi-step actions are on the roadmap.
-      </div>
-      <div className="mini-progress">
-        <i />
-      </div>
+      <p>Plan your week. Remember the details.</p>
     </div>
   );
 }
-function ScreenVisual() {
+function BuildVisual() {
+  const [view, setView] = useState("preview");
   return (
-    <div className="screen-visual">
-      <div className="capture-window">
-        <div className="capture-top">
-          <span className="window-dots">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span>project / terminal</span>
-        </div>
-        <div className="capture-code">
-          <span>$ npm start</span>
-          <br />
-          <br />
-          <b>Error: Cannot find module</b>
-          <br />
-          <span className="capture-muted">Check the project dependencies.</span>
-        </div>
-        <div className="capture-corners">
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-        <div className="scan-line" />
-      </div>
-      <div className="screen-insight">
-        <DrerMark />
+    <div className="build-visual">
+      <div className="build-tabs">
+        <span>
+          <WandSparkles size={14} /> habit-tracker
+        </span>
         <div>
-          A little context helps.
-          <small>Ask about the screen in front of you.</small>
+          <button
+            aria-pressed={view === "code"}
+            onClick={() => setView("code")}
+          >
+            Code
+          </button>
+          <button
+            aria-pressed={view === "preview"}
+            onClick={() => setView("preview")}
+          >
+            Preview
+          </button>
         </div>
-        <Sparkles size={16} />
       </div>
-    </div>
-  );
-}
-function IntegrationsVisual() {
-  return (
-    <div className="integrations-visual">
-      <div className="tech-grid">
-        {[
-          { Icon: Monitor, color: "#de6b30" },
-          { Icon: FolderOpen, color: "#d9953e" },
-          { Icon: Globe, color: "#b47447" },
-          { Icon: AppWindow, color: "#b58965" },
-          { Icon: Terminal, color: "#4f635c" },
-          { Icon: FileCode2, color: "#b06a43" },
-          { Icon: Mic, color: "#cf844e" },
-          { Icon: MousePointer2, color: "#87644f" },
-        ].map(({ Icon, color }, i) => (
-          <div key={i} style={{ "--tech": color } as React.CSSProperties}>
-            <Icon size={28} />
-          </div>
-        ))}
+      {view === "preview" ? (
+        <div className="habit-preview">
+          <span className="tiny-label">YOUR DAILY MOMENTUM</span>
+          <h4>A little better, every day.</h4>
+          {[
+            "Read for 20 minutes",
+            "Go for a walk",
+            "Build something small",
+          ].map((habit, i) => (
+            <div className="habit-row" key={habit}>
+              <span>{habit}</span>
+              <div>
+                {Array.from({ length: 5 }, (_, j) => (
+                  <i key={j} className={j < 4 - i ? "done" : ""}>
+                    {j < 4 - i ? <Check size={9} /> : null}
+                  </i>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <pre className="build-code">
+          <code>
+            {
+              'const habits = [\n  "Read for 20 minutes",\n  "Go for a walk",\n  "Build something small"\n];\n\n// Describe → build → preview → refine'
+            }
+          </code>
+        </pre>
+      )}
+      <div className="build-footer">
+        <span className="online-dot" /> Illustrative app · software-building
+        tools planned
       </div>
-      <div className="integrations-rule" />
-      <p>
-        YOUR APPS <span>●</span> YOUR FILES <span>●</span> YOUR WORK
-      </p>
     </div>
   );
 }
@@ -804,7 +924,7 @@ function PlatformVisual() {
 const faqItems = [
   [
     "What is DRER?",
-    "DRER is the open-source desktop agent we are building for the computer you already use. The goal is an assistant that understands the screen, accepts voice or text, and follows through on tasks across apps. The current starting point is the screen-aware Electron prototype.",
+    "DRER is the open-source assistant we are building for your computer and connected tools. Call it by name or type what you need: plan your week, create a reminder, automate a routine, build an app, or get help across your desktop. Screen understanding is one capability, not the whole product.",
   ],
   [
     "Is this only for Mac?",
@@ -812,7 +932,15 @@ const faqItems = [
   ],
   [
     "Can DRER already control my entire computer?",
-    "Not yet. The current prototype captures a screen on request and returns an AI explanation. Voice, app control, file actions, and reliable multi-step task execution are the next development stages. The demos on this page illustrate that direction.",
+    "Not yet. The current prototype captures a screen on request and returns an AI explanation. Wake-word activation, calendar and reminder connections, recurring automations, vibe-building, and desktop actions are planned development stages. The interactive examples show that product direction.",
+  ],
+  [
+    "Can I call DRER by name?",
+    "That is the intended experience: use a wake phrase, a shortcut, or text to make a request. Voice activation is planned, and its microphone controls and platform-specific behavior still need to be built.",
+  ],
+  [
+    "What could I automate or build?",
+    "The planned workflows include scheduling events, creating reminders, preparing recurring briefings, working across apps and files, and building websites or small applications from a description. Connected services will need explicit setup; the website examples do not create real events, reminders, or projects.",
   ],
   [
     "How is DRER different from AuraOS?",
@@ -896,7 +1024,7 @@ function Walkthrough() {
             From a question to
             <br />a clear next step.
           </h3>
-          <p>Explore the DRER product direction.</p>
+          <p>Ask. Plan. Automate. Build.</p>
           <span className="watch-label">
             <Play size={14} fill="currentColor" /> Watch the demo
           </span>
@@ -993,15 +1121,16 @@ export default function Home() {
           <div className="hero-main">
             <AnimatedTitle />
             <p className="hero-description">
-              An open-source agent for the computer you already use. See what’s
-              on screen, understand what you need, and work toward getting it
-              done. One direction, across Windows, macOS, and Linux.
+              Call DRER by name. Plan your week, remember the little things,
+              automate a routine, or build the app you have in mind. An
+              open-source assistant taking shape across Windows, macOS, and
+              Linux.
             </p>
             <div className="hero-actions">
               <a href="#get-started" className="button button-orange">
                 <Monitor size={18} /> Explore DRER <ArrowDown size={15} />
               </a>
-              <a href={repo} className="button button-orange">
+              <a href={repo} className="button button-outline">
                 <Github size={18} /> Build with us <Arrow />
               </a>
               <CopyCommand />
@@ -1017,10 +1146,10 @@ export default function Home() {
               <span /> THE NEXT CHAPTER
             </h2>
             <a href="#companion">
-              A screen-aware starting point for your desktop <Arrow />
+              A wake phrase. A whole world of possibilities. <Arrow />
             </a>
             <a href="#roadmap">
-              Voice, actions, and the agent loop <Arrow />
+              Calendars, reminders, routines, and vibe-building <Arrow />
             </a>
             <a href="#platforms">
               Windows. macOS. Linux. <Arrow />
@@ -1033,74 +1162,75 @@ export default function Home() {
         >
           <Demo />
           <p className="demo-caption">
-            Product concept · screen understanding is the starting point; voice
-            and desktop actions are in development.
+            Interactive product concepts · voice activation, connected
+            calendars, reminders, routines, and software-building are planned.
           </p>
         </section>
         <section className="features section-container" id="intelligence">
           <article className="feature-row reveal" id="companion">
             <div className="feature-copy">
               <h2>
-                Start with what’s
+                Call it. Say it.
                 <br />
-                right in front of you
+                Keep moving.
               </h2>
               <p>
-                An error, a document, a design, a browser tab. Your screen
-                already holds the context. DRER starts with{" "}
-                <a href={overlay}>screen understanding</a>, so you can ask about
-                what you see without copying everything into a chat.
+                “Hey DRER, help me plan my day.” A wake phrase, a shortcut, or a
+                typed request should be enough to start. We are building toward
+                an assistant that understands your intent and works with the
+                tools you choose to connect.
               </p>
               <a className="text-link" href={overlay}>
-                Explore the screen-aware prototype <Arrow />
+                Explore the current prototype <Arrow />
               </a>
             </div>
             <div className="feature-art">
-              <ScreenVisual />
+              <VoiceVisual />
             </div>
           </article>
-          <article className="feature-row reveal" id="roadmap">
+          <article className="feature-row reveal" id="calendar">
             <div className="feature-copy">
               <h2>
-                From answering questions
-                <br />
-                to following through
+                Your calendar. Your reminders.
+                <br />A little more breathing room.
               </h2>
               <p>
-                “Find my project notes and summarize them.” The goal is an agent
-                that can plan a task, work across apps, and help finish it.{" "}
-                <a href={repo}>
-                  Voice, desktop actions, and multi-step workflows
+                Find focus time around meetings. Remember a deadline. Ask for a
+                morning briefing every weekday.{" "}
+                <a href="#calendar">
+                  Calendars, reminders, and recurring automations
                 </a>{" "}
-                are the next chapters we are building toward.
+                are central to the DRER vision: useful help that follows your
+                day, not just the window you have open.
               </p>
               <a className="text-link" href={repo}>
                 Help build the agent <Arrow />
               </a>
             </div>
             <div className="feature-art">
-              <PlanVisual />
+              <CalendarVisual />
             </div>
           </article>
-          <article className="feature-row reveal">
+          <article className="feature-row reveal" id="build">
             <div className="feature-copy">
               <h2>
-                Your apps. Your files.
-                <br />A more helpful computer.
+                An idea in your head.
+                <br />
+                An app you can shape.
               </h2>
               <p>
-                The ambition goes beyond a single chat window. Talk or type,
-                bring in screen context, and get help where the work happens. We
-                are designing DRER to connect{" "}
-                <a href="#roadmap">understanding with action</a> across the
-                tools you use every day.
+                “DRER, build me a habit tracker.” Describe what you want, let
+                the agent help create a first version, then preview and refine
+                it together. <a href="#build">Vibe-building</a> belongs
+                alongside everyday tasks: build a website, make a small tool, or
+                turn a rough idea into something you can try.
               </p>
               <a className="text-link" href="#faq">
                 See what works today <Arrow />
               </a>
             </div>
             <div className="feature-art">
-              <IntegrationsVisual />
+              <BuildVisual />
             </div>
           </article>
           <article className="feature-row reveal" id="platforms">
@@ -1126,7 +1256,7 @@ export default function Home() {
             </div>
           </article>
         </section>
-        <section className="principles section-container reveal">
+        <section className="principles section-container reveal" id="roadmap">
           <h2>Built around the way you work</h2>
           <div className="principle-grid">
             <article>
@@ -1157,9 +1287,9 @@ export default function Home() {
               <Mic />
               <h3>A conversation, with context</h3>
               <p>
-                Screen understanding comes first. Voice and text, useful
-                actions, and a more capable agent loop are the next steps toward
-                a desktop that can help.
+                Call DRER by name, type a request, or bring in screen context.
+                Calendars, reminders, recurring routines, and building software
+                all belong in the same conversation.
               </p>
               <a href="#roadmap">
                 Follow the direction <Arrow />
@@ -1186,7 +1316,7 @@ export default function Home() {
                 n: "02",
                 label: "WHAT WE ARE BUILDING",
                 title: "DRER, the desktop agent",
-                text: "Voice, app and file actions, and tasks that span steps. For Windows, macOS, and Linux.",
+                text: "Wake-word activation, connected calendars, reminders, recurring routines, and vibe-building. For Windows, macOS, and Linux.",
                 href: "#roadmap",
               },
               {
@@ -1242,10 +1372,10 @@ export default function Home() {
           <div className="cta-orbit orbit-one" />
           <div className="cta-orbit orbit-two" />
           <h2>
-            A little less friction.
-            <br />A lot more possibility.
+            A word. An idea.
+            <br />A place to begin.
           </h2>
-          <p>Help build an agent for everyone’s computer.</p>
+          <p>Help build an assistant for the things you want to do.</p>
           <div className="hero-actions">
             <a href={overlay} className="button button-white">
               <Monitor size={17} /> Explore the prototype <Arrow />
@@ -1280,6 +1410,8 @@ export default function Home() {
                 title: "EXPLORE",
                 links: [
                   ["Roadmap", "#roadmap"],
+                  ["Calendars & routines", "#calendar"],
+                  ["Vibe-building", "#build"],
                   ["Get started", "#get-started"],
                   ["Source code", repo],
                   ["Questions", "#faq"],
