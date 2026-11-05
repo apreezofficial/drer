@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>DRER</string>
+	<key>CFBundleExecutable</key>
+	<string>DRERNative</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.drer.native</string>
+	<key>CFBundleName</key>
+	<string>DRER</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>DRER adds the calendar events you request to Apple Calendar.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>DRER listens for your chosen wake name only while you enable voice mode.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>DRER saves reminders and timed alerts in Apple Reminders so macOS can deliver them even after DRER closes.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>DRER recognizes your spoken commands using on-device speech recognition.</string>
+</dict>
+</plist>

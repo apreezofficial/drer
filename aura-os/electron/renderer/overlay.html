@@ -1,153 +1,206 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AuraAI</title>
-  <link rel="stylesheet" href="overlay.css" />
-</head>
-<body>
-  <div id="app">
-
-    <!-- ── Main view ─────────────────────────────────────────────────── -->
-    <div id="view-main" class="view active">
-
-      <!-- Header -->
-      <div class="header" id="drag-handle">
-        <div class="header-left">
-          <span class="logo">⬡</span>
-          <span class="title">AuraAI</span>
-          <span class="badge">Groq Vision</span>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'"
+    />
+    <title>DRER — Desktop assistant</title>
+    <link rel="stylesheet" href="overlay.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <a class="brand" href="#">△ <span>DRER</span></a>
+        <p class="eyebrow">YOUR ASSISTANT</p>
+        <button class="nav active" id="nav-chat">Conversation</button
+        ><button class="nav" id="nav-settings">Settings</button>
+        <button class="nav" id="voice-toggle">Enable voice</button>
+        <p id="voice-status" role="status">Voice off</p>
+        <progress
+          id="mic-level"
+          max="1"
+          value="0"
+          aria-label="Microphone input level"
+        ></progress>
+        <p id="heard-speech"></p>
+        <div class="sidebar-bottom">
+          <span class="status-dot"></span> Running on
+          <span id="platform-name">your computer</span
+          ><small id="shortcut">Starting…</small>
+          <p><span id="connection-status">Local tools are ready.</span></p>
         </div>
-        <div class="header-right">
-          <button class="icon-btn" id="btn-settings" title="Settings">⚙</button>
-          <button class="icon-btn" id="btn-close"    title="Close (Esc)">✕</button>
-        </div>
-      </div>
-
-      <!-- Screenshot preview -->
-      <div class="screenshot-wrap" id="screenshot-wrap">
-        <img id="screenshot-img" src="" alt="Screen capture" />
-        <div class="screenshot-placeholder" id="screenshot-placeholder">
-          <span>⬡</span>
-          <p>Press <kbd>Win+A+O</kbd> to capture your screen</p>
-        </div>
-      </div>
-
-      <!-- Question input -->
-      <div class="input-row">
-        <input
-          type="text"
-          id="question-input"
-          placeholder='Ask anything — "convert this to Tailwind", "explain this error"...'
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button id="btn-send" title="Send">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.5">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Response area -->
-      <div class="response-wrap">
-        <!-- Loading state -->
-        <div class="loading" id="loading" style="display:none">
-          <div class="spinner"></div>
-          <span>Analysing screen with Groq Vision...</span>
-        </div>
-
-        <!-- Response content -->
-        <div id="response-content" class="response-content"></div>
-
-        <!-- Empty state -->
-        <div class="empty-state" id="empty-state">
-          <div class="empty-icon">⬡</div>
-          <p>Capture your screen and ask anything.</p>
-          <ul>
-            <li>Open Dribbble → <kbd>Win+A+O</kbd> → "generate HTML + Tailwind"</li>
-            <li>See an error → <kbd>Win+A+O</kbd> → "fix this"</li>
-            <li>Any UI → <kbd>Win+A+O</kbd> → "convert to React components"</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        <span class="footer-meta" id="footer-meta">Ready</span>
-        <span class="footer-links">
-          <a href="https://auraos.com" id="link-site">auraos.com</a>
-          ·
-          <a href="https://preciousadedokun.com.ng" id="link-author">Precious Adedokun</a>
-        </span>
-      </div>
-    </div>
-
-    <!-- ── Settings view ─────────────────────────────────────────────── -->
-    <div id="view-settings" class="view">
-      <div class="header" id="drag-handle-settings">
-        <div class="header-left">
-          <span class="logo">⬡</span>
-          <span class="title">Settings</span>
-        </div>
-        <div class="header-right">
-          <button class="icon-btn" id="btn-settings-back">✕</button>
-        </div>
-      </div>
-
-      <div class="settings-body">
-        <div class="setting-group">
-          <label for="key-input">Groq API Key</label>
-          <p class="setting-desc">
-            Get a free key at
-            <a href="https://console.groq.com" id="link-groq">console.groq.com</a>
-          </p>
-          <div class="key-row">
+      </aside>
+      <main>
+        <header>
+          <span id="page-title">A little less by hand.</span
+          ><button id="hide" aria-label="Hide DRER">−</button>
+        </header>
+        <section id="chat-view">
+          <div class="intro">
+            <span class="eyebrow">YOUR COMPUTER. YOUR CALL.</span>
+            <h1>What can I help you do?</h1>
+            <p>
+              Use Apple Reminders, Calendar, and your installed apps through a
+              request.
+            </p>
+            <div class="suggestions">
+              <button data-request="Remind me in 10 seconds to stretch">
+                Set a reminder</button
+              ><button
+                data-request="Save a note called first-test: DRER is running on my computer."
+              >
+                Save a note</button
+              ><button data-request="Build me a habit tracker">
+                Build a starter</button
+              ><button
+                data-request="Draft a meeting called Project check-in tomorrow at 10am for 30 minutes"
+              >
+                Draft a meeting
+              </button>
+            </div>
+          </div>
+          <div id="alarm-banner" role="alert" hidden>
+            <div>
+              <strong>Time’s up.</strong>
+              <p id="alarm-title"></p>
+            </div>
+            <button id="dismiss-alarm">Dismiss</button>
+          </div>
+          <div id="messages" aria-live="polite"></div>
+          <div class="activity-panel">
+            <div class="eyebrow">SYSTEM TASKS</div>
+            <div id="reminders"><p>No reminders scheduled.</p></div>
+          </div>
+          <form id="request-form">
+            <div class="composer">
+              <textarea
+                id="question"
+                rows="2"
+                placeholder="Hey DRER, remind me in 10 minutes to take a break…"
+                aria-label="Your request"
+              ></textarea>
+              <div class="composer-bottom">
+                <label
+                  ><input type="checkbox" id="with-screen" /> Include my screen
+                  <span>→ Groq</span></label
+                >
+                <div>
+                  <button type="button" id="cancel-request" hidden>
+                    Cancel</button
+                  ><button id="send" type="submit">Send ↑</button>
+                </div>
+              </div>
+            </div>
+            <div class="request-status" id="request-status">
+              Ready · Timers, alarms, notes, and app opening run locally.
+            </div>
+          </form>
+        </section>
+        <section id="settings-view" hidden>
+          <div class="settings-heading">
+            <span class="eyebrow">CONNECTIONS & PERMISSIONS</span>
+            <h1>Connect your assistant.</h1>
+            <p>
+              Your key stays in the main process and is encrypted using the
+              operating system’s key store.
+            </p>
+          </div>
+          <form id="settings-form">
+            <label for="api-key">Groq API key</label>
+            <p id="key-state">Checking configuration…</p>
             <input
               type="password"
-              id="key-input"
-              placeholder="gsk_..."
+              id="api-key"
+              placeholder="Paste a new gsk_… key"
               autocomplete="off"
               spellcheck="false"
+            /><button type="button" class="text-link" id="get-key">
+              Create a key at console.groq.com ↗</button
+            ><label for="model">Vision / chat model</label
+            ><input
+              id="model"
+              placeholder="qwen/qwen3.8-27b"
+              spellcheck="false"
             />
-            <button id="btn-toggle-key" class="icon-btn" title="Show/hide">👁</button>
+            <p class="field-help">
+              Use an image-capable model when sharing your screen.
+            </p>
+            <button type="submit" id="save-settings">Save settings</button>
+            <p id="settings-status" role="status"></p>
+          </form>
+          <form id="voice-form" class="permission-card">
+            <h2>Your voice assistant</h2>
+            <label for="wake-name">Wake name</label
+            ><input
+              id="wake-name"
+              value="Buddy"
+              maxlength="24"
+              placeholder="Buddy"
+            />
+            <p class="field-help">
+              Say “Buddy, open Mail”, or “Buddy”, wait for the greeting, then
+              speak your request. “Hey” is optional. English speech recognition
+              runs on your Mac.
+            </p>
+            <label for="wake-aliases">Also recognize these pronunciations</label
+            ><input id="wake-aliases" placeholder="For example: Test, Tessa" />
+            <p class="field-help">
+              Optional alternatives, separated by commas. Add what appears under
+              “Heard” when you say your wake name.
+            </p>
+            <label for="preferred-name">Your name (optional)</label
+            ><input
+              id="preferred-name"
+              maxlength="50"
+              placeholder="What should I call you?"
+            />
+            <p class="field-help">
+              Wake greeting: “How can I help you today?” Add your name to
+              personalize it.
+            </p>
+            <label for="spoken-voice">Reply voice</label
+            ><select id="spoken-voice">
+              <option value="">System default</option>
+            </select>
+            <label
+              ><input type="checkbox" id="spoken-replies" checked /> Speak my
+              results aloud</label
+            >
+            <button type="submit">Save voice settings</button
+            ><button type="button" id="voice-preview">Hear a sample</button>
+            <p id="voice-settings-status" role="status"></p>
+            <p class="field-help">
+              Enable voice in the sidebar to grant microphone and Speech
+              Recognition access. It stays active while the window is hidden;
+              turn it off there or quit DRER to stop listening. Once enabled,
+              voice resumes when you reopen DRER. Audio is not sent to Groq;
+              commands needing AI send only their text.
+            </p>
+          </form>
+          <div class="permission-card">
+            <h2>Screen access</h2>
+            <p id="screen-status">Checking…</p>
+            <p>
+              Only the primary display is captured, and only when “Include my
+              screen” is selected. The capture is sent to Groq for that request.
+            </p>
+            <button id="screen-settings">Open screen-recording settings</button>
           </div>
-          <button id="btn-save-key" class="btn-primary">Save Key</button>
-          <p class="setting-status" id="key-status"></p>
-        </div>
-
-        <div class="setting-group">
-          <label>Hotkey</label>
-          <p class="setting-desc">
-            <kbd>Win + A + O</kbd> — works over any application.
-            The app you're in never sees the keystrokes.
-          </p>
-        </div>
-
-        <div class="setting-group">
-          <label>Model</label>
-          <p class="setting-desc">
-            <code>llama-3.2-11b-vision-preview</code> via Groq.<br/>
-            Supports image input — sees your actual screen.
-          </p>
-        </div>
-
-        <div class="setting-group">
-          <label>About</label>
-          <p class="setting-desc">
-            AuraAI v1.0.0<br/>
-            Created by <a href="https://preciousadedokun.com.ng" id="link-author-settings">Precious Adedokun</a><br/>
-            <a href="https://auraos.com" id="link-site-settings">auraos.com</a>
-          </p>
-        </div>
-      </div>
+          <div class="permission-card">
+            <h2>What works in this build</h2>
+            <p>
+              Native Apple Reminders and Calendar events, installed-app
+              launching, Spotify playback, notes, web searches, and Groq chat /
+              vision. Optional English voice mode listens for your chosen wake
+              name. General autonomous computer control is still in development.
+            </p>
+          </div>
+        </section>
+      </main>
     </div>
-
-  </div>
-
-  <script src="overlay.js"></script>
-</body>
+    <script src="overlay.js"></script>
+  </body>
 </html>

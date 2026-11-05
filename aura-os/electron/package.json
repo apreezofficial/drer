@@ -1,41 +1,67 @@
 {
-  "name": "aura-ai",
-  "version": "1.0.0",
-  "description": "AuraAI — global screen AI overlay powered by Groq Vision",
+  "name": "drer-desktop",
+  "version": "0.2.0",
+  "description": "DRER \u2014 cross-platform desktop assistant",
   "author": "Precious Adedokun <hello@preciousadedokun.com.ng>",
   "homepage": "https://auraos.com",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron . --show",
     "dev": "electron . --dev",
     "build": "electron-builder --win --x64",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:mac": "npm run build:native && electron-builder --mac --arm64 --config.electronDist=node_modules/electron/dist",
+    "build:linux": "electron-builder --linux",
+    "test": "node --test test/*.test.cjs",
+    "test:desktop": "node scripts/native-system-test.cjs",
+    "build:native": "node scripts/build-native.cjs",
+    "prestart": "node scripts/build-native.cjs",
+    "pack:mac": "npm run build:native && electron-builder --mac --dir --arm64 --config.electronDist=node_modules/electron/dist"
   },
-  "dependencies": {
-    "groq-sdk": "0.3.3"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "electron": "29.1.4",
-    "electron-builder": "24.13.3"
+    "electron": "45.2.3",
+    "electron-builder": "24.13.3",
+    "playwright": "1.64.1"
   },
   "build": {
-    "appId": "com.auraos.aurai",
-    "productName": "AuraAI",
+    "appId": "com.drer.desktop",
+    "productName": "DRER",
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": "nsis"
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "extendInfo": {
+        "NSScreenCaptureUsageDescription": "DRER reads a screen only when you request screen context.",
+        "NSMicrophoneUsageDescription": "DRER uses the microphone when you start voice input.",
+        "NSAppleEventsUsageDescription": "DRER controls apps such as Spotify only when you ask it to.",
+        "NSRemindersFullAccessUsageDescription": "DRER creates native reminders and timed alerts you request.",
+        "NSCalendarsWriteOnlyAccessUsageDescription": "DRER adds events you request to Apple Calendar.",
+        "LSUIElement": true,
+        "NSSpeechRecognitionUsageDescription": "DRER recognizes spoken commands when you enable voice mode."
+      },
+      "identity": null,
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
     },
     "linux": {
-      "target": "AppImage",
-      "icon": "assets/icon.png"
-    }
-  }
+      "target": "AppImage"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "native/build/**/*",
+      "native/*.applescript",
+      "assets/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "native/build/**/*",
+      "native/*.applescript"
+    ]
+  },
+  "productName": "DRER"
 }

@@ -1,32 +1,53 @@
-/**
- * AuraAI — Preload Script
- * Exposes a safe, typed bridge between the renderer and main process.
- */
-
-const { contextBridge, ipcRenderer } = require('electron');
-
-contextBridge.exposeInMainWorld('aura', {
-  // Trigger a screen capture + AI query
-  query: (question) =>
-    ipcRenderer.invoke('ai:capture-and-query', { question }),
-
-  // Hide the overlay
-  hide: () => ipcRenderer.send('overlay:hide'),
-
-  // Config
-  getConfig: () => ipcRenderer.invoke('config:get'),
-  getKey:    () => ipcRenderer.invoke('config:get-key'),
-  setConfig: (cfg) => ipcRenderer.invoke('config:set', cfg),
-
-  // Listen for events from main
+const { contextBridge, ipcRenderer } = require("electron");
+const listeners = new Map();
+contextBridge.exposeInMainWorld("drer", {
+  configureVoice: (value) => ipcRenderer.invoke("voice:configure", value),
+  toggleVoice: (enabled) => ipcRenderer.invoke("voice:toggle", enabled),
+  voiceDiagnostics: () => ipcRenderer.invoke("voice:diagnostics"),
+  voices: () => ipcRenderer.invoke("voice:voices"),
+  previewVoice: () => ipcRenderer.invoke("voice:preview"),
+  state: () => ipcRenderer.invoke("app:state"),
+  request: (payload) => ipcRenderer.invoke("agent:request", payload),
+  confirm: (id) => ipcRenderer.invoke("agent:confirm", id),
+  cancelPlan: (id) => ipcRenderer.invoke("agent:cancel-plan", id),
+  cancelRequest: () => ipcRenderer.invoke("agent:cancel-request"),
+  cancelReminder: (id) => ipcRenderer.invoke("agent:cancel-reminder", id),
+  saveConfig: (cfg) => ipcRenderer.invoke("config:save", cfg),
+  openNative: (application) =>
+    ipcRenderer.invoke("app:open-native", application),
+  openResult: (file) => ipcRenderer.invoke("app:open-result", file),
+  openLink: (url) => ipcRenderer.invoke("app:open-link", url),
+  permissions: () => ipcRenderer.invoke("app:permissions"),
+  hide: () => ipcRenderer.invoke("app:hide"),
   on: (channel, fn) => {
-    const allowed = ['ai:loading', 'ai:result', 'nav:settings'];
-    if (allowed.includes(channel)) {
-      ipcRenderer.on(channel, (event, ...args) => fn(...args));
-    }
+    if (
+      ![
+        "voice:meter",
+        "voice:transcript",
+        "voice:state",
+        "voice:wake",
+        "voice:heard",
+        "voice:result",
+        "config:ready",
+        "nav:settings",
+        "app:state",
+        "agent:busy",
+        "reminder:due",
+        "app:error",
+        "test:result",
+      ].includes(channel) ||
+      typeof fn !== "function"
+    )
+      return;
+    const wrapper = (_, data) => fn(data);
+    listeners.set(fn, { channel, wrapper });
+    ipcRenderer.on(channel, wrapper);
   },
-
-  off: (channel, fn) => {
-    ipcRenderer.removeListener(channel, fn);
+  off: (fn) => {
+    const item = listeners.get(fn);
+    if (item) {
+      ipcRenderer.removeListener(item.channel, item.wrapper);
+      listeners.delete(fn);
+    }
   },
 });
