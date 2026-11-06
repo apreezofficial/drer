@@ -1,6 +1,8 @@
 import Foundation
 import EventKit
 import AppKit
+import Speech
+import AVFoundation
 
 struct Request: Decodable {
     var operation: String
@@ -27,7 +29,9 @@ func emit(_ result: [String:Any], code:Int32 = 0) -> Never {
 if CommandLine.arguments.contains("--listen") {
     let voiceApp=NSApplication.shared
     voiceApp.setActivationPolicy(.accessory)
-    Task { @MainActor in let listener=VoiceListener();await listener.start() }
+    let index=CommandLine.arguments.firstIndex(of:"--wake-name")
+    let wakeName=index.flatMap { $0+1<CommandLine.arguments.count ? CommandLine.arguments[$0+1] : nil } ?? "Buddy"
+    Task { @MainActor in let listener=VoiceListener(wakeName:wakeName);await listener.start() }
     voiceApp.run()
     exit(0)
 }
@@ -65,6 +69,10 @@ Task { @MainActor in
             if ranked.count>1 && ranked[0].2==ranked[1].2 { throw NSError(domain:"DRER",code:10,userInfo:[NSLocalizedDescriptionKey:"More than one installed app matches. Use the full app name: "+ranked.prefix(4).map{$0.0}.joined(separator:", ")]) }
             _ = try await NSWorkspace.shared.openApplication(at:target.1,configuration:NSWorkspace.OpenConfiguration())
             emit(["ok":true,"application":target.0,"opened":true])
+        }
+        if request.operation == "voice-status" {
+            let recognizer=SFSpeechRecognizer(locale:Locale(identifier:"en-US"))
+            emit(["ok":true,"microphone":AVCaptureDevice.authorizationStatus(for:.audio).rawValue,"speech":SFSpeechRecognizer.authorizationStatus().rawValue,"available":recognizer?.isAvailable ?? false,"onDevice":recognizer?.supportsOnDeviceRecognition ?? false])
         }
         if request.operation == "status" {
             emit(["ok":true,"reminders":EKEventStore.authorizationStatus(for:.reminder).rawValue,"calendar":EKEventStore.authorizationStatus(for:.event).rawValue])

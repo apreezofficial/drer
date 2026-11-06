@@ -58,3 +58,32 @@ test("wake name settings reject regex or command syntax", () => {
     voice: "",
   });
 });
+
+test("Tester alone acknowledges and the following command executes without hey", async () => {
+  const { VoiceService } = require("../src/voice");
+  const spoken = [],
+    commands = [];
+  const service = new VoiceService({
+    onState: () => {},
+    onWake: () => {},
+    onCommand: async (command) => {
+      commands.push(command);
+      return { text: "Opened Calculator." };
+    },
+  });
+  service.router.setName("tester");
+  service.enabled = true;
+  service.stopListener = () => {};
+  service.listen = () => {};
+  service.speak = async (text) => {
+    spoken.push(text);
+    await service.heard("Tester open Mail");
+  };
+  assert.deepEqual(service.router.prefix("Tester"), { command: "" });
+  assert.equal(service.router.prefix("Testers"), null);
+  await service.heard("Tester");
+  assert.deepEqual(spoken, ["Hmm?"]);
+  await service.heard("open Calculator");
+  assert.deepEqual(commands, ["open Calculator"]);
+  assert.deepEqual(spoken, ["Hmm?", "Opened Calculator."]);
+});

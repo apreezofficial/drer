@@ -43,9 +43,11 @@ The desktop integration test exercises the renderer preload/IPC request connecti
 
 ## Voice mode on macOS
 
-In Settings, choose a wake name such as **Buddy**, a reply voice from the installed macOS voices, and whether results are spoken. Save, then use **Hear a sample**. Turn on **Enable voice** in the sidebar and grant macOS Microphone and Speech Recognition permissions. Voice starts disabled at each app launch.
+In Settings, choose a wake name such as **Buddy**, a reply voice from the installed macOS voices, and whether results are spoken. Save, then use **Hear a sample**. Turn on **Enable voice** in the sidebar and grant macOS Microphone and Speech Recognition permissions. After you enable voice, it resumes when you reopen DRER.
 
-Say “Hey Buddy, open Mail”, or say “Hey Buddy”, wait for “Yes?”, then speak a command within 12 seconds. Voice keeps working when the window is hidden while DRER runs. Turn voice off in the sidebar or quit DRER to stop listening. Recognition pauses during spoken replies to avoid hearing itself.
+Say “Buddy, open Mail”, or say “Buddy”, wait for “Hmm?”, then speak a command within 12 seconds. “Hey” is optional. A microphone meter and the last recognized phrase help diagnose input. Voice keeps working when the window is hidden while DRER runs. Turn voice off in the sidebar or quit DRER to stop listening. Recognition pauses during spoken replies to avoid hearing itself.
+
+Launch the installed app from Finder / Applications for voice testing. Starting its binary directly from a terminal or coding tool can inherit that tool’s macOS privacy identity and prevent the Speech Recognition permission prompt.
 
 The listener requires English on-device recognition and available macOS speech assets; it reports an error rather than falling back to cloud audio recognition. Wake-name detection is software speech recognition, not Siri’s hardware wake detection. Audio is not sent to Groq; an AI request sends the recognized command text.
 

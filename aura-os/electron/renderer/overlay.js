@@ -8,7 +8,12 @@ function setView(name) {
   $("nav-settings").classList.toggle("active", name === "settings");
   $("page-title").textContent =
     name === "chat" ? "A little less by hand." : "Settings";
-  if (name === "settings") refresh();
+  if (name === "settings") {
+    refresh();
+    loadVoiceSettings().catch(
+      (error) => ($("voice-settings-status").textContent = error.message),
+    );
+  }
 }
 function message(role, text, kind = "") {
   const article = document.createElement("article");
@@ -362,5 +367,12 @@ window.drer.on("voice:heard", (data) =>
 );
 window.drer.on("voice:result", renderResult);
 window.drer.on("voice:wake", () => {
-  $("voice-status").textContent = "Yes? Listening for your request…";
+  $("voice-status").textContent = "Hmm? Listening for your request…";
+});
+
+window.drer.on("voice:meter", (data) => {
+  $("mic-level").value = data.level;
+});
+window.drer.on("voice:transcript", (data) => {
+  $("heard-speech").textContent = "Heard: " + data.text;
 });

@@ -19,6 +19,13 @@
         ><button class="nav" id="nav-settings">Settings</button>
         <button class="nav" id="voice-toggle">Enable voice</button>
         <p id="voice-status" role="status">Voice off</p>
+        <progress
+          id="mic-level"
+          max="1"
+          value="0"
+          aria-label="Microphone input level"
+        ></progress>
+        <p id="heard-speech"></p>
         <div class="sidebar-bottom">
           <span class="status-dot"></span> Running on
           <span id="platform-name">your computer</span
@@ -134,8 +141,9 @@
               placeholder="Buddy"
             />
             <p class="field-help">
-              Say “Hey Buddy, open Mail”, or “Hey Buddy”, wait for “Yes?”, then
-              speak your request. English speech recognition runs on your Mac.
+              Say “Buddy, open Mail”, or “Buddy”, wait for “Hmm?”, then speak
+              your request. “Hey” is optional. English speech recognition runs
+              on your Mac.
             </p>
             <label for="spoken-voice">Reply voice</label
             ><select id="spoken-voice">
@@ -151,9 +159,9 @@
             <p class="field-help">
               Enable voice in the sidebar to grant microphone and Speech
               Recognition access. It stays active while the window is hidden;
-              turn it off there or quit DRER to stop listening. Voice starts off
-              each time DRER launches. Audio is not sent to Groq; commands
-              needing AI send only their text.
+              turn it off there or quit DRER to stop listening. Once enabled,
+              voice resumes when you reopen DRER. Audio is not sent to Groq;
+              commands needing AI send only their text.
             </p>
           </form>
           <div class="permission-card">
