@@ -843,10 +843,13 @@ function LivePlayer() {
       video.duration;
   }
   return (
-    <div className="live-player" data-playing={playing}>
+    <div
+      className="group relative overflow-hidden rounded-[18px] bg-panel leading-none shadow-[0_24px_60px_#0006]"
+      data-playing={playing}
+    >
       <video
         ref={ref}
-        className="live-test-video"
+        className="block max-h-[760px] w-full cursor-pointer bg-panel object-contain"
         muted
         loop
         playsInline
@@ -864,9 +867,10 @@ function LivePlayer() {
         <source src="/media/drer-macos-live.mp4" type="video/mp4" />
         Your browser does not support video playback.
       </video>
-      <div className="live-player-bar">
+      <div className="absolute bottom-[18px] left-1/2 flex w-[min(360px,calc(100%-32px))] -translate-x-1/2 translate-y-2 items-center gap-3 rounded-full border border-line bg-panel py-2 pr-4 pl-2 opacity-0 shadow-[0_10px_30px_#0008] transition duration-200 group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 group-data-[playing=false]:translate-y-0 group-data-[playing=false]:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
         <button
           type="button"
+          className="grid size-[34px] flex-none cursor-pointer place-items-center rounded-full bg-accent text-black hover:bg-accent-soft"
           onClick={toggle}
           aria-label={playing ? "Pause recording" : "Play recording"}
         >
@@ -877,7 +881,7 @@ function LivePlayer() {
           )}
         </button>
         <div
-          className="live-player-track"
+          className="relative h-1 flex-1 cursor-pointer rounded-sm bg-line before:absolute before:inset-x-0 before:-inset-y-2.5 before:content-['']"
           onClick={seek}
           role="progressbar"
           aria-label="Recording progress"
@@ -885,13 +889,16 @@ function LivePlayer() {
           aria-valuemax={100}
           aria-valuenow={Math.round(progress * 100)}
         >
-          <span style={{ transform: `scaleX(${progress})` }} />
+          <span
+            className="absolute inset-0 origin-left rounded-sm bg-accent"
+            style={{ transform: `scaleX(${progress})` }}
+          />
         </div>
       </div>
       {!playing && reduced && (
         <button
           type="button"
-          className="live-player-big"
+          className="absolute inset-0 m-auto grid size-[84px] cursor-pointer place-items-center rounded-full bg-accent text-black"
           onClick={toggle}
           aria-label="Play recording"
         >
@@ -1066,10 +1073,10 @@ export default function Home() {
           className="product-section section-container"
           aria-label="Recorded DRER macOS integration test"
         >
-          <div className="video-frame">
+          <div className="rounded-[28px] bg-accent-soft p-[clamp(14px,3vw,40px)] min-[761px]:rounded-[44px]">
             <LivePlayer />
           </div>
-          <p className="demo-caption">
+          <p className="mx-auto mt-[18px] max-w-[760px] text-center font-body text-[13px] text-muted underline decoration-line underline-offset-4">
             Recorded macOS integration test · real Apple Reminders, a live AI
             tool call, Calculator, and Apple Calendar. Native reminders verified
             after DRER quit. Voice activation and broader automation are still
