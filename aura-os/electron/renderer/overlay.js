@@ -1,257 +1,297 @@
-/**
- * AuraAI — Renderer Process
- * Handles UI state, markdown rendering, and IPC communication.
- */
-
-/* ---- Elements ------------------------------------------------------------ */
-
-const viewMain     = document.getElementById('view-main');
-const viewSettings = document.getElementById('view-settings');
-
-const screenshotImg         = document.getElementById('screenshot-img');
-const screenshotPlaceholder = document.getElementById('screenshot-placeholder');
-const questionInput         = document.getElementById('question-input');
-const btnSend               = document.getElementById('btn-send');
-const btnClose              = document.getElementById('btn-close');
-const btnSettings           = document.getElementById('btn-settings');
-const btnSettingsBack       = document.getElementById('btn-settings-back');
-const loadingEl             = document.getElementById('loading');
-const responseContent       = document.getElementById('response-content');
-const emptyState            = document.getElementById('empty-state');
-const footerMeta            = document.getElementById('footer-meta');
-
-const keyInput    = document.getElementById('key-input');
-const btnToggleKey = document.getElementById('btn-toggle-key');
-const btnSaveKey  = document.getElementById('btn-save-key');
-const keyStatus   = document.getElementById('key-status');
-
-/* ---- View switching ------------------------------------------------------ */
-
-function showView(name) {
-  viewMain.classList.toggle('active', name === 'main');
-  viewSettings.classList.toggle('active', name === 'settings');
+const $ = (id) => document.getElementById(id);
+let state = {},
+  busy = false;
+function setView(name) {
+  $("chat-view").hidden = name !== "chat";
+  $("settings-view").hidden = name !== "settings";
+  $("nav-chat").classList.toggle("active", name === "chat");
+  $("nav-settings").classList.toggle("active", name === "settings");
+  $("page-title").textContent =
+    name === "chat" ? "A little less by hand." : "Settings";
+  if (name === "settings") refresh();
 }
-
-btnSettings.addEventListener('click', () => {
-  loadKeyIntoSettings();
-  showView('settings');
-});
-
-btnSettingsBack.addEventListener('click', () => showView('main'));
-btnClose.addEventListener('click', () => window.aura.hide());
-
-/* ---- External links ------------------------------------------------------ */
-
-document.querySelectorAll('a[href]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    // In Electron renderer we can't use shell directly — send to main via IPC
-    // For simplicity, open in default browser via window.open
-    window.open(a.href, '_blank');
+function message(role, text, kind = "") {
+  const article = document.createElement("article");
+  article.className = "message " + role + " " + kind;
+  const label = document.createElement("span");
+  label.className = "message-label";
+  label.textContent =
+    role === "user"
+      ? "YOU"
+      : role === "reminder"
+        ? "REMINDER DELIVERED"
+        : "DRER";
+  const content = document.createElement("p");
+  content.textContent = text;
+  article.append(label, content);
+  $("messages").append(article);
+  article.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  return article;
+}
+function updateCountdowns() {
+  document.querySelectorAll("[data-due]").forEach((node) => {
+    const seconds = Math.max(
+      0,
+      Math.ceil((new Date(node.dataset.due).getTime() - Date.now()) / 1000),
+    );
+    const h = Math.floor(seconds / 3600),
+      m = Math.floor((seconds % 3600) / 60),
+      s = seconds % 60;
+    node.textContent =
+      (h ? h + ":" : "") +
+      String(m).padStart(2, "0") +
+      ":" +
+      String(s).padStart(2, "0");
   });
-});
-
-/* ---- Settings ------------------------------------------------------------ */
-
-async function loadKeyIntoSettings() {
-  try {
-    const { groqApiKey } = await window.aura.getKey();
-    keyInput.value = groqApiKey || '';
-  } catch {}
 }
-
-btnToggleKey.addEventListener('click', () => {
-  keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+function showReminders(items = []) {
+  $("reminders").replaceChildren();
+  if (!items.length) {
+    const p = document.createElement("p");
+    p.textContent = "No active timers. Try “set a timer for 10s”.";
+    $("reminders").append(p);
+  }
+  for (const item of items.slice(-8).reverse()) {
+    const row = document.createElement("div");
+    row.className = "reminder-row " + item.status;
+    const name = document.createElement("span");
+    name.textContent =
+      (item.status === "delivered"
+        ? "✓ "
+        : item.status === "cancelled"
+          ? "− "
+          : "◷ ") + item.title;
+    const detail = document.createElement("div");
+    detail.className = "reminder-detail";
+    const time = document.createElement("small");
+    time.textContent =
+      new Date(item.dueAt).toLocaleTimeString() +
+      " · " +
+      (item.native ? "Apple Reminders · " : "") +
+      item.status;
+    detail.append(time);
+    if (item.status === "scheduled") {
+      const count = document.createElement("strong");
+      count.className = "countdown";
+      count.dataset.due = item.dueAt;
+      detail.append(count);
+      const cancel = document.createElement("button");
+      cancel.textContent = "Cancel";
+      cancel.setAttribute("aria-label", "Cancel " + item.title);
+      cancel.addEventListener("click", async () => {
+        try {
+          const next = await window.drer.cancelReminder(item.id);
+          showReminders(next.reminders);
+        } catch (e) {
+          message("assistant", e.message, "error");
+        }
+      });
+      detail.append(cancel);
+    }
+    row.append(name, detail);
+    $("reminders").append(row);
+  }
+  updateCountdowns();
+}
+setInterval(updateCountdowns, 250);
+$("dismiss-alarm").addEventListener("click", () => {
+  $("alarm-banner").hidden = true;
 });
-
-btnSaveKey.addEventListener('click', async () => {
-  const key = keyInput.value.trim();
-  if (!key) {
-    keyStatus.textContent = 'Please enter a key.';
-    keyStatus.className = 'setting-status err';
+async function refresh() {
+  state = await window.drer.state();
+  $("platform-name").textContent =
+    { darwin: "macOS", win32: "Windows", linux: "Linux" }[state.platform] ||
+    state.platform;
+  $("shortcut").textContent =
+    state.platform === "darwin" &&
+    state.shortcut === "CommandOrControl+Shift+Space"
+      ? "⌘ + ⇧ + Space"
+      : state.shortcut || "Open from the tray";
+  $("connection-status").textContent = state.hasKey
+    ? "Local tools + live Groq connected."
+    : "Local tools ready. Add a key for AI.";
+  $("key-state").textContent = state.hasKey
+    ? "A key is configured. Leave the field empty to keep it."
+    : "No key configured. Paste a key below to enable live AI.";
+  $("model").value = state.model;
+  $("screen-status").textContent =
+    "Permission status: " + state.screenPermission;
+  showReminders(state.reminders);
+}
+function setBusy(value) {
+  busy = value;
+  $("send").disabled = value;
+  $("cancel-request").hidden = !value;
+  $("request-status").textContent = value
+    ? "Working on your request…"
+    : "Ready · Local actions do not need an API key.";
+}
+function openResultButton(article, result) {
+  if (result.application) {
+    const open = document.createElement("button");
+    open.className = "action-button";
+    open.textContent = "Open " + result.service;
+    open.addEventListener("click", () =>
+      window.drer
+        .openNative(result.application)
+        .catch((e) => message("assistant", e.message, "error")),
+    );
+    article.append(open);
+  }
+  if (!result.path) return;
+  const button = document.createElement("button");
+  button.className = "action-button";
+  button.textContent =
+    result.kind === "habit_tracker"
+      ? "Open working preview"
+      : result.kind === "calendar_draft"
+        ? "Open Calendar import draft"
+        : "Open saved note";
+  button.addEventListener("click", async () => {
+    try {
+      await window.drer.openResult(result.path);
+    } catch (e) {
+      message("assistant", e.message, "error");
+    }
+  });
+  article.append(button);
+}
+function renderResult(result) {
+  if (result.type === "plan") {
+    const article = message("assistant", result.plan.text, "plan");
+    const buttons = document.createElement("div");
+    buttons.className = "plan-actions";
+    const confirm = document.createElement("button");
+    confirm.className = "action-button";
+    confirm.textContent = "Confirm action";
+    const cancel = document.createElement("button");
+    cancel.textContent = "Cancel";
+    buttons.append(confirm, cancel);
+    article.append(buttons);
+    confirm.addEventListener("click", async () => {
+      confirm.disabled = true;
+      cancel.disabled = true;
+      try {
+        const done = await window.drer.confirm(result.plan.id);
+        buttons.remove();
+        const output = message("assistant", done.text, "success");
+        openResultButton(output, done);
+        showReminders(done.reminders);
+      } catch (e) {
+        message("assistant", e.message, "error");
+      }
+    });
+    cancel.addEventListener("click", async () => {
+      await window.drer.cancelPlan(result.plan.id);
+      buttons.remove();
+      const p = document.createElement("p");
+      p.textContent = "Cancelled. Nothing changed.";
+      article.append(p);
+    });
     return;
   }
+  const article = message(
+    "assistant",
+    result.text,
+    result.type === "error" ? "error" : "success",
+  );
+  if (result.screenshot) {
+    const image = document.createElement("img");
+    image.src = result.screenshot;
+    image.alt = "Screen shared for this request";
+    image.className = "screen-result";
+    article.append(image);
+  }
+  if (result.model) {
+    const meta = document.createElement("small");
+    meta.textContent = `${result.route === "ai-tool" ? "Executed through an AI tool" : "Live Groq response"} · ${result.model} · ${result.tokens} tokens`;
+    article.append(meta);
+  }
+  if (result.reminders) showReminders(result.reminders);
+  openResultButton(article, result);
+}
+$("request-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (busy) return;
+  const question = $("question").value.trim();
+  if (!question) return;
+  const withScreen = $("with-screen").checked;
+  message(
+    "user",
+    question + (withScreen ? "\n[Primary screen shared with Groq]" : ""),
+  );
+  $("question").value = "";
+  setBusy(true);
   try {
-    await window.aura.setConfig({ groqApiKey: key });
-    keyStatus.textContent = '✓ Key saved.';
-    keyStatus.className = 'setting-status ok';
-    setTimeout(() => { keyStatus.textContent = ''; }, 3000);
+    renderResult(await window.drer.request({ question, withScreen }));
   } catch (e) {
-    keyStatus.textContent = 'Failed to save.';
-    keyStatus.className = 'setting-status err';
+    message("assistant", e.message, "error");
+  } finally {
+    setBusy(false);
   }
 });
-
-/* ---- Query submission ---------------------------------------------------- */
-
-async function submitQuery() {
-  const question = questionInput.value.trim();
-  await window.aura.query(question || null);
-}
-
-btnSend.addEventListener('click', submitQuery);
-
-questionInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
+$("question").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
-    submitQuery();
+    $("request-form").requestSubmit();
   }
 });
-
-/* ---- IPC: loading state -------------------------------------------------- */
-
-window.aura.on('ai:loading', ({ question }) => {
-  showView('main');
-  loadingEl.style.display    = 'flex';
-  emptyState.style.display   = 'none';
-  responseContent.innerHTML  = '';
-  footerMeta.textContent     = 'Analysing with Groq Vision...';
-
-  if (question) {
-    questionInput.value = question;
-  }
-});
-
-/* ---- IPC: result --------------------------------------------------------- */
-
-window.aura.on('ai:result', ({ success, text, screenshot, model, tokens }) => {
-  loadingEl.style.display = 'none';
-
-  // Show screenshot
-  if (screenshot) {
-    screenshotImg.src = screenshot;
-    screenshotImg.classList.add('visible');
-    screenshotPlaceholder.classList.add('hidden');
-  }
-
-  // Render response
-  emptyState.style.display  = 'none';
-  responseContent.innerHTML = renderMarkdown(text || '');
-
-  // Add copy buttons to code blocks
-  responseContent.querySelectorAll('pre').forEach(pre => {
-    const btn = document.createElement('button');
-    btn.className   = 'copy-btn';
-    btn.textContent = 'Copy';
-    btn.addEventListener('click', () => {
-      const code = pre.querySelector('code');
-      navigator.clipboard.writeText(code ? code.textContent : pre.textContent);
-      btn.textContent = 'Copied!';
-      btn.classList.add('copied');
-      setTimeout(() => {
-        btn.textContent = 'Copy';
-        btn.classList.remove('copied');
-      }, 2000);
+$("cancel-request").addEventListener("click", () =>
+  window.drer.cancelRequest(),
+);
+document.querySelectorAll("[data-request]").forEach((button) =>
+  button.addEventListener("click", () => {
+    $("question").value = button.dataset.request;
+    $("question").focus();
+  }),
+);
+$("nav-chat").addEventListener("click", () => setView("chat"));
+$("nav-settings").addEventListener("click", () => setView("settings"));
+$("hide").addEventListener("click", () => window.drer.hide());
+$("get-key").addEventListener("click", () =>
+  window.drer.openLink("https://console.groq.com/keys"),
+);
+$("screen-settings").addEventListener("click", () => window.drer.permissions());
+$("settings-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("save-settings").disabled = true;
+  try {
+    await window.drer.saveConfig({
+      key: $("api-key").value,
+      model: $("model").value,
     });
-    pre.style.position = 'relative';
-    pre.appendChild(btn);
-  });
-
-  // Footer meta
-  if (success) {
-    footerMeta.textContent = tokens
-      ? `${tokens} tokens · ${model || 'Groq Vision'}`
-      : 'Done';
-  } else {
-    footerMeta.textContent = 'Error — check your API key in Settings';
+    $("api-key").value = "";
+    $("settings-status").textContent =
+      "Settings saved. Your key is not shown or sent to the renderer.";
+    await refresh();
+  } catch (e) {
+    $("settings-status").textContent = e.message;
+  } finally {
+    $("save-settings").disabled = false;
   }
 });
+window.drer.on("nav:settings", () => setView("settings"));
+window.drer.on("app:state", (data) => showReminders(data.reminders));
+window.drer.on("agent:busy", (data) => setBusy(data.busy));
+window.drer.on("reminder:due", async (item) => {
+  $("alarm-title").textContent = item.title;
+  $("alarm-banner").hidden = false;
+  message(
+    "reminder",
+    item.title +
+      "\nDelivered at " +
+      new Date(item.deliveredAt).toLocaleTimeString(),
+    "success",
+  );
+  await refresh();
+});
+window.drer.on("app:error", (item) => message("assistant", item.text, "error"));
+refresh().catch((e) => message("assistant", e.message, "error"));
 
-/* ---- IPC: navigate to settings ------------------------------------------ */
-
-window.aura.on('nav:settings', () => {
-  loadKeyIntoSettings();
-  showView('settings');
+window.drer.on("test:result", (data) => {
+  const item = message("test", data.question);
+  item.querySelector(".message-label").textContent = "RECORDED SYSTEM TEST";
+  renderResult(data.result);
 });
 
-/* ---- Markdown renderer --------------------------------------------------- */
-/*
- * Lightweight markdown → HTML converter.
- * Handles: code blocks, inline code, headers, bold, italic, lists, paragraphs.
- * No external dependency needed.
- */
-
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-function renderMarkdown(md) {
-  let html = '';
-  const lines = md.split('\n');
-  let i = 0;
-  let inList = false;
-
-  const closeList = () => {
-    if (inList) { html += '</ul>'; inList = false; }
-  };
-
-  while (i < lines.length) {
-    const line = lines[i];
-
-    // Fenced code block
-    if (line.startsWith('```')) {
-      closeList();
-      const lang = line.slice(3).trim();
-      let code = '';
-      i++;
-      while (i < lines.length && !lines[i].startsWith('```')) {
-        code += escapeHtml(lines[i]) + '\n';
-        i++;
-      }
-      html += `<pre><code class="lang-${escapeHtml(lang)}">${code}</code></pre>`;
-      i++;
-      continue;
-    }
-
-    // Headings
-    const hMatch = line.match(/^(#{1,3})\s+(.+)/);
-    if (hMatch) {
-      closeList();
-      const level = hMatch[1].length;
-      html += `<h${level}>${inlineMarkdown(hMatch[2])}</h${level}>`;
-      i++; continue;
-    }
-
-    // Unordered list
-    const liMatch = line.match(/^[-*+]\s+(.+)/);
-    if (liMatch) {
-      if (!inList) { html += '<ul>'; inList = true; }
-      html += `<li>${inlineMarkdown(liMatch[1])}</li>`;
-      i++; continue;
-    }
-
-    // Blank line
-    if (line.trim() === '') {
-      closeList();
-      i++; continue;
-    }
-
-    // Paragraph
-    closeList();
-    html += `<p>${inlineMarkdown(line)}</p>`;
-    i++;
-  }
-
-  closeList();
-  return html;
-}
-
-function inlineMarkdown(str) {
-  return escapeHtml(str)
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
-}
-
-/* ---- Keyboard shortcuts -------------------------------------------------- */
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') window.aura.hide();
-});
+window.drer.on("config:ready", () => refresh());
