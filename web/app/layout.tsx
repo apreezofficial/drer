@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "AuraOS — Intelligence at the heart of your system",
+  title: "DRER — An open-source agent for your computer",
   description:
-    "Explore AuraOS, an experimental AI-native x86 operating system, and AuraAI, a screen-aware desktop companion. Built in the open by Precious Adedokun.",
+    "An open-source desktop agent in development for Windows, macOS, and Linux. Screen understanding today; voice, desktop actions, and multi-step workflows ahead.",
 };
 export default function RootLayout({
   children,

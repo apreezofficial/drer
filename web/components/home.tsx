@@ -18,6 +18,11 @@ import {
   Layers3,
   Menu,
   Monitor,
+  Mic,
+  MousePointer2,
+  FolderOpen,
+  AppWindow,
+  Globe,
   Pause,
   Play,
   Search,
@@ -28,11 +33,12 @@ import {
 } from "lucide-react";
 
 const repo = "https://github.com/apreezofficial/drer";
-const docs = `${repo}/blob/main/aura-os/docs/run.md`;
+const docs = `${repo}/tree/main/aura-os/electron`;
+const kernelDocs = `${repo}/blob/main/aura-os/docs/run.md`;
 const overlay = `${repo}/tree/main/aura-os/electron`;
 const command = "git clone https://github.com/apreezofficial/drer.git";
 
-function AuraMark({ className = "" }: { className?: string }) {
+function DrerMark({ className = "" }: { className?: string }) {
   return (
     <svg
       className={`aura-mark ${className}`}
@@ -104,19 +110,29 @@ function CopyCommand({ compact = false }: { compact?: boolean }) {
   );
 }
 function AnimatedTitle() {
-  const text = "Intelligence at the heart of your system.";
+  const text = "Your computer. Now with an agent.";
+  let offset = 0;
   return (
     <h1 aria-label={text}>
       <span aria-hidden="true">
-        {text.split(" ").map((word, i) => (
-          <span
-            className="title-word"
-            style={{ animationDelay: `${120 + i * 85}ms` }}
-            key={i}
-          >
-            {word}&nbsp;
-          </span>
-        ))}
+        {text.split(" ").map((word, i) => {
+          const start = offset;
+          offset += word.length + 1;
+          return (
+            <span className="title-word" key={i}>
+              {word.split("").map((letter, j) => (
+                <span
+                  className="title-character"
+                  style={{ animationDelay: `${100 + (start + j) * 22}ms` }}
+                  key={j}
+                >
+                  {letter}
+                </span>
+              ))}
+              &nbsp;
+            </span>
+          );
+        })}
       </span>
       <span className="title-caret" aria-hidden="true" />
     </h1>
@@ -124,31 +140,32 @@ function AnimatedTitle() {
 }
 const searchItems = [
   {
-    title: "Run AuraOS in QEMU",
-    description: "Build prerequisites and kernel setup",
-    href: docs,
-  },
-  {
-    title: "AuraAI desktop companion",
-    description: "Screen capture, overlay, and Groq setup",
+    title: "DRER desktop assistant",
+    description: "Screen understanding and the desktop prototype",
     href: overlay,
   },
   {
-    title: "Kernel architecture",
-    description: "Memory, interrupts, drivers, and AI core",
-    href: `${repo}/blob/main/aura-os/docs/architecture.md`,
+    title: "Windows, macOS, and Linux",
+    description: "Explore the platform build targets",
+    href: "#platforms",
   },
   {
-    title: "AI layer",
-    description: "Context collection and inference",
-    href: `${repo}/blob/main/aura-os/docs/ai-layer.md`,
+    title: "Agent roadmap",
+    description: "Voice, desktop actions, and multi-step workflows",
+    href: "#roadmap",
+  },
+  {
+    title: "AuraOS research kernel",
+    description: "The long-term AI-native operating system",
+    href: kernelDocs,
   },
   {
     title: "Source code",
-    description: "Explore the project on GitHub",
+    description: "Build and contribute on GitHub",
     href: repo,
   },
 ];
+
 function Header() {
   const [menu, setMenu] = useState(false);
   const [dropdown, setDropdown] = useState<string | null>(null);
@@ -186,48 +203,53 @@ function Header() {
   return (
     <>
       <header className="site-header">
-        <a className="logo" href="#" aria-label="AuraOS home">
-          <AuraMark />
-          <span>
-            AURA<span className="logo-outline">OS</span>
-          </span>
+        <a className="logo" href="#" aria-label="DRER home">
+          <DrerMark />
+          <span className="logo-outline">DRER</span>
         </a>
         <nav className="desktop-nav" aria-label="Main navigation">
-          <a href="#intelligence">INTELLIGENCE</a>
-          <div className="nav-dropdown">
+          <a href="#intelligence">AGENT</a>
+          <div
+            className="nav-dropdown"
+            onMouseEnter={() => setDropdown("apps")}
+            onMouseLeave={() => setDropdown(null)}
+          >
             <button
-              aria-expanded={dropdown === "products"}
-              onClick={() =>
-                setDropdown(dropdown === "products" ? null : "products")
-              }
+              aria-expanded={dropdown === "apps"}
+              onClick={() => setDropdown(dropdown === "apps" ? null : "apps")}
             >
-              PRODUCTS <ChevronDown size={13} />
+              APPS <ChevronDown size={13} />
             </button>
-            {dropdown === "products" && (
+            {dropdown === "apps" && (
               <div className="dropdown-panel">
-                <a href="#kernel" onClick={() => setDropdown(null)}>
-                  <Cpu size={19} />
-                  <span>
-                    AuraOS<small>The AI-native kernel</small>
-                  </span>
-                  <Arrow />
-                </a>
                 <a href="#companion" onClick={() => setDropdown(null)}>
                   <Monitor size={19} />
                   <span>
-                    AuraAI<small>Your desktop companion</small>
+                    DRER desktop
+                    <small>The assistant for your existing OS</small>
+                  </span>
+                  <Arrow />
+                </a>
+                <a href="#auraos" onClick={() => setDropdown(null)}>
+                  <Cpu size={19} />
+                  <span>
+                    AuraOS<small>The long-term operating system</small>
                   </span>
                   <Arrow />
                 </a>
               </div>
             )}
           </div>
-          <a href="#architecture">ARCHITECTURE</a>
+          <a href="#platforms">PLATFORMS</a>
           <a href={docs}>DOCS</a>
           <a href={repo}>
-            GITHUB <Arrow />
+            COMMUNITY <Arrow />
           </a>
-          <div className="nav-dropdown">
+          <div
+            className="nav-dropdown"
+            onMouseEnter={() => setDropdown("resources")}
+            onMouseLeave={() => setDropdown(null)}
+          >
             <button
               aria-expanded={dropdown === "resources"}
               onClick={() =>
@@ -239,8 +261,15 @@ function Header() {
             {dropdown === "resources" && (
               <div className="dropdown-panel">
                 {searchItems.slice(0, 4).map((x) => (
-                  <a key={x.title} href={x.href}>
-                    <span>{x.title}</span>
+                  <a
+                    key={x.title}
+                    href={x.href}
+                    onClick={() => setDropdown(null)}
+                  >
+                    <span>
+                      {x.title}
+                      <small>{x.description}</small>
+                    </span>
                     <Arrow />
                   </a>
                 ))}
@@ -260,12 +289,8 @@ function Header() {
           >
             <Search size={20} />
           </button>
-          <a
-            className="header-source"
-            href={repo}
-            aria-label="AuraOS on GitHub"
-          >
-            <Github size={19} />
+          <a className="button button-outline header-source" href={repo}>
+            SOURCE <Github size={14} />
           </a>
           <a className="button button-white header-build" href="#get-started">
             GET STARTED
@@ -283,12 +308,12 @@ function Header() {
       {menu && (
         <nav className="mobile-nav" aria-label="Mobile navigation">
           {[
-            ["Intelligence", "#intelligence"],
-            ["AuraOS kernel", "#kernel"],
-            ["AuraAI companion", "#companion"],
-            ["Architecture", "#architecture"],
+            ["The agent", "#intelligence"],
+            ["Desktop companion", "#companion"],
+            ["Windows, macOS, Linux", "#platforms"],
+            ["Roadmap", "#roadmap"],
+            ["AuraOS", "#auraos"],
             ["Documentation", docs],
-            ["GitHub", repo],
             ["Get started", "#get-started"],
           ].map(([label, href]) => (
             <a href={href} key={label} onClick={() => setMenu(false)}>
@@ -296,6 +321,15 @@ function Header() {
               <Arrow />
             </a>
           ))}
+          <button
+            onClick={() => {
+              setMenu(false);
+              setQuery("");
+              setSearch(true);
+            }}
+          >
+            Search documentation <Search size={19} />
+          </button>
         </nav>
       )}
       {dropdown && (
@@ -311,7 +345,7 @@ function Header() {
             className="search-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label="Search AuraOS documentation"
+            aria-label="Search DRER documentation"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Tab") {
@@ -337,7 +371,7 @@ function Header() {
                 ref={searchInput}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search AuraOS..."
+                placeholder="Search DRER..."
                 aria-label="Search"
               />
               <button
@@ -369,7 +403,7 @@ function Header() {
                 `${x.title} ${x.description}`
                   .toLowerCase()
                   .includes(query.toLowerCase()),
-              ) && <p>No results. Try “kernel” or “desktop”.</p>}
+              ) && <p>No results. Try “desktop” or “Windows”.</p>}
             </div>
             <div className="search-hint">
               Search the project documentation <kbd>esc</kbd> to close
@@ -381,23 +415,23 @@ function Header() {
   );
 }
 const terminalLines = [
-  ["$ make run", "command"],
-  ["[AuraOS] Kernel booting...", "muted"],
-  ["  ✓ GDT · IDT · Interrupts enabled", "success"],
-  ["  ✓ Physical and virtual memory online", "success"],
-  ["  ✓ AI core initialized", "success"],
+  ["you › help me with what’s on my screen", "command"],
   ["", ""],
-  ["aura@os › ai explain how paging works", "command"],
+  ["✳ DRER / illustrative agent session", "accent"],
+  ["  ✓ Read the visible context", "success"],
+  ["  ✓ Understand the request", "success"],
+  ["  → Suggest the next step", "accent"],
   ["", ""],
-  ["✳ AuraAI", "accent"],
-  ["  The kernel uses x86 two-level paging.", ""],
-  ["  A page directory points to page tables;", ""],
-  ["  each table maps 4 KB physical frames.", ""],
+  ["  This error points to a missing package.", ""],
+  ["  I can explain the fix and help you", ""],
+  ["  work through it, right here.", ""],
   ["", ""],
-  ["  System context. A clearer answer.", "accent"],
+  ["  See → Understand → Plan → Act", "accent"],
+  ["  Desktop actions & voice: on the roadmap", "muted"],
 ];
+
 function Demo({ small = false }: { small?: boolean }) {
-  const [active, setActive] = useState<"kernel" | "screen">("kernel");
+  const [active, setActive] = useState<"tasks" | "screen">("screen");
   const [playing, setPlaying] = useState(true);
   const [line, setLine] = useState(1);
   const demoRef = useRef<HTMLDivElement>(null);
@@ -435,52 +469,50 @@ function Demo({ small = false }: { small?: boolean }) {
             <i />
           </div>
           <span>
-            <AuraMark /> AuraOS workspace
+            <DrerMark /> DRER workspace
           </span>
           <span className="os-top-right">
-            <span className="online-dot" /> Context connected
+            <span className="online-dot" /> Concept preview
           </span>
         </div>
         <div className="os-body">
           <aside className="os-sidebar">
             <div className="os-brand">
-              <AuraMark /> aura<span>os</span>
+              <DrerMark /> drer
             </div>
             <div className="sidebar-caption">YOUR WORKSPACE</div>
             <button
-              className={active === "kernel" ? "selected" : ""}
-              onClick={() => setActive("kernel")}
+              className={active === "tasks" ? "selected" : ""}
+              onClick={() => setActive("tasks")}
             >
-              <Terminal size={15} /> Kernel shell
+              <Layers3 size={15} /> Task planner
             </button>
             <button
               className={active === "screen" ? "selected" : ""}
               onClick={() => setActive("screen")}
             >
-              <Monitor size={15} /> Screen companion
+              <Monitor size={15} /> Screen context
             </button>
             <div className="sidebar-caption second">SYSTEM</div>
             <span>
-              <Cpu size={14} /> Memory manager
+              <Cpu size={14} /> Connected apps
             </span>
             <span>
-              <Layers3 size={14} /> Interrupts & events
+              <Layers3 size={14} /> Files & folders
             </span>
             <span>
-              <GitBranch size={14} /> Inference backend
+              <GitBranch size={14} /> Voice & text
             </span>
             <div className="sidebar-bottom">
-              <span className="online-dot" /> Experimental build
+              <span className="online-dot" /> Open source · in development
               <br />
-              <small>x86 · protected mode</small>
+              <small>Windows · macOS · Linux</small>
             </div>
           </aside>
           <div className="os-conversation">
             <div className="conversation-bar">
               <span>
-                {active === "kernel"
-                  ? "Kernel intelligence"
-                  : "Screen companion"}
+                {active === "tasks" ? "Task planning" : "Screen understanding"}
               </span>
               <span>✳</span>
             </div>
@@ -489,37 +521,37 @@ function Demo({ small = false }: { small?: boolean }) {
                 CONTEXT MAKES THE DIFFERENCE
               </div>
               <h3>
-                {active === "kernel"
-                  ? "Your system, explained."
+                {active === "tasks"
+                  ? "A little help. All the way through."
                   : "A second pair of eyes."}
               </h3>
               <div className="user-message">
-                {active === "kernel"
-                  ? "How does memory work in this kernel?"
+                {active === "tasks"
+                  ? "Help me organize the notes for this project."
                   : "Can you explain the error on my screen?"}
               </div>
               <div className="assistant-label">
-                <AuraMark /> AuraAI <span>with context</span>
+                <DrerMark /> DRER <span>with context</span>
               </div>
               <p>
-                {active === "kernel"
-                  ? "Let’s look under the surface. AuraOS tracks physical memory in 4 KB frames and maps it with a two-level paging structure."
-                  : "Capture your screen with the desktop companion, ask a question, and get an explanation in a floating overlay."}
+                {active === "tasks"
+                  ? "Start with a plan: find the relevant notes, group the useful information, then review the result before saving it. This previews the agent workflow we are building."
+                  : "That message points to a missing dependency. The screen-aware prototype can help explain what you are looking at, without making you retype the error."}
               </p>
               <div className="inline-code">
                 <span>
-                  {active === "kernel"
-                    ? "kernel / mm / pmm.c"
-                    : "electron / screen context"}
+                  {active === "tasks"
+                    ? "project / suggested plan"
+                    : "desktop / captured context"}
                 </span>
                 <code>
-                  {active === "kernel" ? (
+                  {active === "tasks" ? (
                     <>
-                      <b>uint32_t</b> frame = pmm_alloc_frame();
+                      <b>01</b> Find the project notes
                       <br />
-                      <b>vmm_map_page</b>(virtual, frame, flags);
+                      <b>02</b> Group, summarize, and review
                       <br />
-                      <em>// Physical memory, mapped to your context.</em>
+                      <em>// Planned workflow · review before saving.</em>
                     </>
                   ) : (
                     <>
@@ -533,35 +565,35 @@ function Demo({ small = false }: { small?: boolean }) {
                 </code>
               </div>
               <div className="context-pills">
-                <span>✓ Memory context</span>
-                <span>✓ System events</span>
-                <span>✓ Uptime</span>
+                <span>✓ Screen context</span>
+                <span>✓ Your request</span>
+                <span>✓ Next steps</span>
               </div>
             </div>
             <div className="composer">
-              Ask about your system...<span>↑</span>
+              Ask about anything on your screen...<span>↑</span>
             </div>
           </div>
           <aside className="context-panel">
             <div>
-              SYSTEM CONTEXT <Cpu size={13} />
+              YOUR COMPUTER <Cpu size={13} />
             </div>
             <p>
-              Live understanding
+              A familiar desktop
               <br />
-              <span>starts at the core.</span>
+              <span>with a new kind of help.</span>
             </p>
             <div className="stat-row">
-              <span>Architecture</span>
-              <b>x86 / 32-bit</b>
+              <span>Windows</span>
+              <b>Build target</b>
             </div>
             <div className="stat-row">
-              <span>Memory frames</span>
-              <b>4 KB</b>
+              <span>macOS</span>
+              <b>Build target</b>
             </div>
             <div className="stat-row">
-              <span>Timer</span>
-              <b>1000 Hz</b>
+              <span>Linux</span>
+              <b>Build target</b>
             </div>
             <div className="context-graph">
               {Array.from({ length: 28 }, (_, i) => (
@@ -585,7 +617,7 @@ function Demo({ small = false }: { small?: boolean }) {
             <i />
             <i />
           </div>
-          <span>Terminal — AuraOS</span>
+          <span>DRER — agent session</span>
           <button
             onClick={() => setPlaying(!playing)}
             aria-label={playing ? "Pause terminal demo" : "Play terminal demo"}
@@ -595,7 +627,7 @@ function Demo({ small = false }: { small?: boolean }) {
         </div>
         <div
           className="terminal-content"
-          aria-label="Animated illustrative AuraOS boot session"
+          aria-label="Animated illustrative DRER agent session"
         >
           {terminalLines.slice(0, line).map(([text, kind], i) => (
             <div key={i} className={kind}>
@@ -608,47 +640,49 @@ function Demo({ small = false }: { small?: boolean }) {
     </div>
   );
 }
-function KernelVisual() {
+function PlanVisual() {
   return (
     <div className="kernel-visual">
       <div className="mini-tabs">
-        <span>Requirements</span>
-        <span>Architecture</span>
-        <span className="active">Kernel</span>
-        <span className="tag">All systems</span>
+        <span>Context</span>
+        <span>Plan</span>
+        <span className="active">Steps</span>
+        <span className="tag">CONCEPT</span>
       </div>
       <div className="kernel-task">
         <Check size={14} />
-        <span>1. Initialize the core subsystems</span>
+        <span>1. Understand the request</span>
       </div>
       <div className="task-tree">
         {[
-          "GDT + IDT · protected mode",
-          "Physical memory · bitmap allocator",
-          "Virtual memory · x86 paging",
-          "PIT timer · 1000 Hz",
-          "PS/2 keyboard · input stream",
-        ].map((s, i) => (
-          <div key={s} style={{ animationDelay: `${i * 0.15}s` }}>
+          "Read the screen you share",
+          "Keep your question in context",
+          "Break the task into clear steps",
+        ].map((x) => (
+          <div key={x}>
             <span>✓</span>
-            {s}
+            {x}
           </div>
         ))}
       </div>
       <div className="kernel-task">
-        <Check size={14} />
-        <span>2. Bring context into the conversation</span>
+        <MousePointer2 size={14} />
+        <span>2. Help you follow through</span>
       </div>
       <div className="task-tree">
-        <div>
-          <span>✓</span>Collect system state
-        </div>
-        <div>
-          <span>✓</span>Query the AI core
-        </div>
-        <div>
-          <span>✓</span>Explain what is happening
-        </div>
+        {[
+          "Find the right app or file",
+          "Preview the proposed action",
+          "Review the result together",
+        ].map((x) => (
+          <div key={x}>
+            <span>→</span>
+            {x}
+          </div>
+        ))}
+      </div>
+      <div className="plan-footnote">
+        Multi-step actions are on the roadmap.
       </div>
       <div className="mini-progress">
         <i />
@@ -656,31 +690,41 @@ function KernelVisual() {
     </div>
   );
 }
-function MemoryVisual() {
+function ScreenVisual() {
   return (
-    <div className="memory-visual">
-      <div className="memory-card">
-        <span className="tiny-label">SYSTEM / MEMORY</span>
-        <h4>Every bit has a purpose.</h4>
-        <p>Physical memory manager</p>
-        <div className="bitmap">
-          {Array.from({ length: 96 }, (_, i) => (
-            <i
-              className={i < 21 || i % 17 === 0 ? "allocated" : ""}
-              style={{ animationDelay: `${i * 25}ms` }}
-              key={i}
-            />
-          ))}
-        </div>
-        <div className="bitmap-key">
-          <span>
-            <i /> Allocated
+    <div className="screen-visual">
+      <div className="capture-window">
+        <div className="capture-top">
+          <span className="window-dots">
+            <i />
+            <i />
+            <i />
           </span>
-          <span>
-            <i /> Available
-          </span>
+          <span>project / terminal</span>
         </div>
-        <div className="memory-foot">1 bit → 1 physical frame → 4 KB</div>
+        <div className="capture-code">
+          <span>$ npm start</span>
+          <br />
+          <br />
+          <b>Error: Cannot find module</b>
+          <br />
+          <span className="capture-muted">Check the project dependencies.</span>
+        </div>
+        <div className="capture-corners">
+          <i />
+          <i />
+          <i />
+          <i />
+        </div>
+        <div className="scan-line" />
+      </div>
+      <div className="screen-insight">
+        <DrerMark />
+        <div>
+          A little context helps.
+          <small>Ask about the screen in front of you.</small>
+        </div>
+        <Sparkles size={16} />
       </div>
     </div>
   );
@@ -690,101 +734,104 @@ function IntegrationsVisual() {
     <div className="integrations-visual">
       <div className="tech-grid">
         {[
-          { text: "C", color: "#4572bd" },
-          { text: "ASM", color: "#fa6c4b" },
-          { text: "Q", color: "#e79725" },
-          { text: "G", color: "#f35a2c" },
-          { text: "E", color: "#8cdded" },
-          { text: "PY", color: "#ecc94b" },
-          { text: "GIT", color: "#f2573b" },
-          { text: "x86", color: "#9b63ed" },
-        ].map((x) => (
-          <div
-            key={x.text}
-            style={{ "--tech": x.color } as React.CSSProperties}
-          >
-            {x.text}
+          { Icon: Monitor, color: "#de6b30" },
+          { Icon: FolderOpen, color: "#d9953e" },
+          { Icon: Globe, color: "#b47447" },
+          { Icon: AppWindow, color: "#b58965" },
+          { Icon: Terminal, color: "#4f635c" },
+          { Icon: FileCode2, color: "#b06a43" },
+          { Icon: Mic, color: "#cf844e" },
+          { Icon: MousePointer2, color: "#87644f" },
+        ].map(({ Icon, color }, i) => (
+          <div key={i} style={{ "--tech": color } as React.CSSProperties}>
+            <Icon size={28} />
           </div>
         ))}
       </div>
       <div className="integrations-rule" />
       <p>
-        C + ASSEMBLY <span>●</span> QEMU <span>●</span> ELECTRON
+        YOUR APPS <span>●</span> YOUR FILES <span>●</span> YOUR WORK
       </p>
     </div>
   );
 }
-function BackendVisual() {
-  const [backend, setBackend] = useState("Groq");
+function PlatformVisual() {
+  const [platform, setPlatform] = useState("Windows");
   return (
     <div className="backend-visual">
       <div className="backend-menu">
-        <span className="tiny-label">INFERENCE BACKEND</span>
+        <span className="tiny-label">YOUR OPERATING SYSTEM</span>
         {[
-          { name: "Groq", detail: "Host-side serial proxy", tag: "API" },
           {
-            name: "Mock engine",
-            detail: "Built in · no API key",
-            tag: "LOCAL",
+            name: "Windows",
+            detail: "Electron · NSIS build target",
+            tag: "WIN",
           },
-          { name: "Local inference", detail: "On the roadmap", tag: "PLANNED" },
+          { name: "macOS", detail: "Electron · DMG build target", tag: "MAC" },
+          {
+            name: "Linux",
+            detail: "Electron · AppImage build target",
+            tag: "LINUX",
+          },
         ].map((x) => (
           <button
-            disabled={x.tag === "PLANNED"}
-            className={backend === x.name ? "active" : ""}
             key={x.name}
-            onClick={() => setBackend(x.name)}
+            className={platform === x.name ? "active" : ""}
+            onClick={() => setPlatform(x.name)}
           >
             <span>
               {x.name}
               <small>{x.detail}</small>
             </span>
             <span className="backend-badge">
-              {backend === x.name ? <Check size={12} /> : x.tag}
+              {platform === x.name ? <Check size={12} /> : x.tag}
             </span>
           </button>
         ))}
       </div>
       <div className="backend-composer">
-        ai explain this system <ArrowRight size={14} />
+        <Monitor size={14} />
+        {platform} · same DRER direction
+        <ArrowRight size={14} />
       </div>
       <div className="backend-status">
         <span className="online-dot" />
-        {backend} selected · illustrative configuration
+        Build from source · platform validation in progress
       </div>
     </div>
   );
 }
 const faqItems = [
   [
-    "What is AuraOS?",
-    "AuraOS is an experimental, AI-native, 32-bit x86 operating system. Its AI core is a kernel subsystem alongside memory management, interrupt handlers, and drivers. It is a project for exploration and learning, created by Precious Adedokun.",
+    "What is DRER?",
+    "DRER is the open-source desktop agent we are building for the computer you already use. The goal is an assistant that understands the screen, accepts voice or text, and follows through on tasks across apps. The current starting point is the screen-aware Electron prototype.",
   ],
   [
-    "How is AuraAI different from AuraOS?",
-    "AuraOS is the kernel project that runs in QEMU. AuraAI is a separate Electron application that runs on an existing desktop, captures your screen when invoked, and shows an AI response in a floating overlay. You can explore either independently.",
+    "Is this only for Mac?",
+    "No. Windows, macOS, and Linux are all part of the product direction. The Electron project has NSIS, DMG, and AppImage build targets. Each platform still needs its own permission handling, integration work, and testing; these are build targets, not a claim of fully tested releases.",
   ],
   [
-    "How can I get started?",
-    "Clone the repository and follow the setup guide. For the kernel you will need NASM, an x86 cross-compiler, and QEMU. For the desktop companion, install its npm dependencies and configure your Groq API key.",
+    "Can DRER already control my entire computer?",
+    "Not yet. The current prototype captures a screen on request and returns an AI explanation. Voice, app control, file actions, and reliable multi-step task execution are the next development stages. The demos on this page illustrate that direction.",
   ],
   [
-    "Does the AI run locally?",
-    "The kernel includes a built-in mock responder that works without an API key. Real model inference uses Groq through a host-side serial proxy. Local model inference remains on the roadmap.",
+    "How is DRER different from AuraOS?",
+    "DRER is the desktop assistant for an existing operating system. AuraOS is the separate, long-term research project: an AI-native operating system built from the kernel up. You do not need to boot or install AuraOS to explore the desktop assistant.",
   ],
   [
     "What happens to my screen capture?",
-    "The desktop companion sends the screenshot you capture to Groq for analysis using your API key. The screen-aware workflow is a cloud inference feature; screenshots are not processed entirely on your device.",
+    "The existing desktop prototype sends a screenshot to Groq for analysis when you invoke it, using your API key. It does not process the screenshot entirely on your device. Local inference and additional provider choices are future possibilities.",
   ],
   [
-    "Can I use this as my everyday operating system?",
-    "AuraOS is an early experimental kernel, not a complete everyday desktop. Run it in a virtual environment such as QEMU. A scheduler, filesystem, and networking are among the planned features.",
+    "How do I try it or contribute?",
+    "Open the source repository and follow the desktop setup instructions in aura-os/electron. Install the dependencies, configure your Groq API key, and run the prototype. You can contribute to screen understanding, platform integrations, the agent loop, or the interface.",
   ],
   [
-    "Is the demo on this page a running operating system?",
-    "The interactive workspace and walkthrough are illustrative demonstrations. They show how the project is structured and how the workflow feels. To run the actual software, build the kernel or launch the Electron companion from the repository.",
+    "Will I stay in control?",
+    "That is the design goal. The agent should make its progress visible, let you interrupt it, and ask before consequential actions such as sending a message or deleting a file. These controls will be developed alongside desktop actions.",
   ],
 ];
+
 function FAQ() {
   const [open, setOpen] = useState<number | null>(null);
   return (
@@ -846,10 +893,10 @@ function Walkthrough() {
         <div>
           <span className="tiny-label">A SHORT WALKTHROUGH</span>
           <h3>
-            From boot to
-            <br />a better question.
+            From a question to
+            <br />a clear next step.
           </h3>
-          <p>Explore the AuraOS workflow.</p>
+          <p>Explore the DRER product direction.</p>
           <span className="watch-label">
             <Play size={14} fill="currentColor" /> Watch the demo
           </span>
@@ -872,7 +919,7 @@ function Walkthrough() {
             className="video-dialog"
             role="dialog"
             aria-modal="true"
-            aria-label="AuraOS illustrative walkthrough"
+            aria-label="DRER illustrative walkthrough"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => {
               if (e.key === "Tab") {
@@ -904,15 +951,15 @@ function Walkthrough() {
             <video
               tabIndex={0}
               ref={videoRef}
-              src="/media/aura-walkthrough.webm"
+              src="/media/drer-walkthrough.webm"
               controls
               autoPlay
               playsInline
               preload="metadata"
             />
             <p>
-              Illustrative AuraOS workflow · build and run the real project from
-              source.
+              DRER product concept · voice and desktop actions are on the
+              roadmap.
             </p>
           </section>
         </div>
@@ -946,160 +993,149 @@ export default function Home() {
           <div className="hero-main">
             <AnimatedTitle />
             <p className="hero-description">
-              AuraOS brings AI into the heart of the operating system.
-              Understand your kernel with system context, or see your desktop in
-              a new way with a screen-aware companion. Built from scratch. Built
-              in the open.
+              An open-source agent for the computer you already use. See what’s
+              on screen, understand what you need, and work toward getting it
+              done. One direction, across Windows, macOS, and Linux.
             </p>
             <div className="hero-actions">
-              <a href={docs} className="button button-purple">
-                <Cpu size={18} /> Build AuraOS <Download size={16} />
+              <a href="#get-started" className="button button-orange">
+                <Monitor size={18} /> Explore DRER <ArrowDown size={15} />
               </a>
-              <a href={overlay} className="button button-purple">
-                <Monitor size={18} /> Get AuraAI <ArrowDown size={15} />
+              <a href={repo} className="button button-orange">
+                <Github size={18} /> Build with us <Arrow />
               </a>
               <CopyCommand />
+            </div>
+            <div className="platform-strip">
+              <span className="development-dot" /> IN DEVELOPMENT{" "}
+              <span className="strip-divider" /> Windows <span>·</span> macOS{" "}
+              <span>·</span> Linux
             </div>
           </div>
           <aside className="whats-new">
             <h2>
-              <span /> WHAT’S NEW
+              <span /> THE NEXT CHAPTER
             </h2>
-            <a href={overlay}>
-              Meet AuraAI: your screen-aware desktop companion <Arrow />
+            <a href="#companion">
+              A screen-aware starting point for your desktop <Arrow />
             </a>
-            <a href={`${repo}/blob/main/aura-os/docs/ai-layer.md`}>
-              Kernel context meets Groq inference <Arrow />
+            <a href="#roadmap">
+              Voice, actions, and the agent loop <Arrow />
             </a>
-            <a href={`${repo}/blob/main/aura-os/docs/architecture.md`}>
-              Explore the architecture, from boot to shell <Arrow />
+            <a href="#platforms">
+              Windows. macOS. Linux. <Arrow />
             </a>
           </aside>
         </section>
         <section
           className="product-section section-container"
-          aria-label="AuraOS interactive product preview"
+          aria-label="DRER interactive concept preview"
         >
           <Demo />
           <p className="demo-caption">
-            Illustrative workspace. Select a view to explore the kernel or
-            desktop companion.
+            Product concept · screen understanding is the starting point; voice
+            and desktop actions are in development.
           </p>
         </section>
         <section className="features section-container" id="intelligence">
-          <article className="feature-row reveal" id="kernel">
+          <article className="feature-row reveal" id="companion">
             <div className="feature-copy">
               <h2>
-                Bring intelligence closer
+                Start with what’s
                 <br />
-                to the operating system
+                right in front of you
               </h2>
               <p>
-                AuraOS puts the{" "}
-                <a href={`${repo}/blob/main/aura-os/docs/ai-layer.md`}>
-                  AI core inside the kernel
-                </a>
-                , alongside memory management and interrupts. Every question can
-                carry system context, so you can understand what the computer is
-                actually doing.
+                An error, a document, a design, a browser tab. Your screen
+                already holds the context. DRER starts with{" "}
+                <a href={overlay}>screen understanding</a>, so you can ask about
+                what you see without copying everything into a chat.
               </p>
-              <a
-                className="text-link"
-                href={`${repo}/blob/main/aura-os/docs/architecture.md`}
-              >
-                Explore the kernel <Arrow />
+              <a className="text-link" href={overlay}>
+                Explore the screen-aware prototype <Arrow />
               </a>
             </div>
             <div className="feature-art">
-              <KernelVisual />
+              <ScreenVisual />
+            </div>
+          </article>
+          <article className="feature-row reveal" id="roadmap">
+            <div className="feature-copy">
+              <h2>
+                From answering questions
+                <br />
+                to following through
+              </h2>
+              <p>
+                “Find my project notes and summarize them.” The goal is an agent
+                that can plan a task, work across apps, and help finish it.{" "}
+                <a href={repo}>
+                  Voice, desktop actions, and multi-step workflows
+                </a>{" "}
+                are the next chapters we are building toward.
+              </p>
+              <a className="text-link" href={repo}>
+                Help build the agent <Arrow />
+              </a>
+            </div>
+            <div className="feature-art">
+              <PlanVisual />
             </div>
           </article>
           <article className="feature-row reveal">
             <div className="feature-copy">
               <h2>
-                A clearer picture of
-                <br />
-                what is happening inside
+                Your apps. Your files.
+                <br />A more helpful computer.
               </h2>
               <p>
-                From physical frames to page tables, there is a lot beneath a
-                prompt. AuraOS collects{" "}
-                <a href={`${repo}/blob/main/aura-os/docs/ai-layer.md`}>
-                  memory statistics and system state
-                </a>{" "}
-                before a query, giving the assistant a foundation for explaining
-                the kernel.
+                The ambition goes beyond a single chat window. Talk or type,
+                bring in screen context, and get help where the work happens. We
+                are designing DRER to connect{" "}
+                <a href="#roadmap">understanding with action</a> across the
+                tools you use every day.
               </p>
-              <a
-                className="text-link"
-                href={`${repo}/tree/main/aura-os/kernel`}
-              >
-                Look under the surface <Arrow />
-              </a>
-            </div>
-            <div className="feature-art">
-              <MemoryVisual />
-            </div>
-          </article>
-          <article className="feature-row reveal" id="companion">
-            <div className="feature-copy">
-              <h2>
-                Alongside you, across
-                <br />
-                your desktop
-              </h2>
-              <p>
-                Working through a terminal error? Exploring a design? The
-                separate <a href={overlay}>AuraAI desktop companion</a> captures
-                the screen you invoke it on, sends it to Groq, and brings an
-                explanation back in a floating overlay.
-              </p>
-              <a className="text-link" href={overlay}>
-                Meet the desktop companion <Arrow />
+              <a className="text-link" href="#faq">
+                See what works today <Arrow />
               </a>
             </div>
             <div className="feature-art">
               <IntegrationsVisual />
             </div>
           </article>
-          <article className="feature-row reveal">
+          <article className="feature-row reveal" id="platforms">
             <div className="feature-copy">
               <h2>
-                A small core.
+                Your assistant.
                 <br />
-                Room for possibility.
+                Your operating system.
               </h2>
               <p>
-                Use <a href={docs}>Groq through a host-side serial proxy</a>, or
-                explore the kernel with the built-in mock responder. The
-                inference layer is designed to be replaceable. Local model
-                inference is part of the roadmap.
+                Windows, macOS, and Linux are all part of the plan. The existing
+                Electron foundation includes{" "}
+                <a href={overlay}>NSIS, DMG, and AppImage build targets</a>. We
+                are working toward the native permissions, integrations, and
+                testing each platform needs.
               </p>
-              <a
-                className="text-link"
-                href={`${repo}/blob/main/aura-os/docs/ai-layer.md`}
-              >
-                Learn about inference <Arrow />
+              <a className="text-link" href={overlay}>
+                Explore platform setup <Arrow />
               </a>
             </div>
             <div className="feature-art">
-              <BackendVisual />
+              <PlatformVisual />
             </div>
           </article>
         </section>
-        <section
-          className="principles section-container reveal"
-          id="architecture"
-        >
-          <h2>Built for the curious</h2>
+        <section className="principles section-container reveal">
+          <h2>Built around the way you work</h2>
           <div className="principle-grid">
             <article>
               <Code2 />
-              <h3>Open from the beginning</h3>
+              <h3>Open source, from day one</h3>
               <p>
-                Read the C and Assembly. Follow the boot sequence. Trace the
-                path from a keyboard interrupt to a question in the shell. The
-                source is yours to explore.
+                Inspect the code, understand how context moves, and help shape
+                the agent. This is a project you can build with, not just a
+                product you can use.
               </p>
               <a href={repo}>
                 Explore the repository <Arrow />
@@ -1107,58 +1143,58 @@ export default function Home() {
             </article>
             <article>
               <ShieldCheck />
-              <h3>Understand the boundaries</h3>
+              <h3>You stay in the loop</h3>
               <p>
-                A research kernel, a separate desktop app, and a cloud inference
-                backend. Clear architecture makes it easier to see what runs
-                where and where context goes.
+                The design goal is visible plans, interruptible work, and
+                confirmation before consequential actions. Agency for your
+                assistant should come with control for you.
               </p>
-              <a href={`${repo}/blob/main/aura-os/docs/architecture.md`}>
-                Read the architecture <Arrow />
+              <a href="#faq">
+                Read the common questions <Arrow />
               </a>
             </article>
             <article>
-              <Sparkles />
-              <h3>Experiment on your terms</h3>
+              <Mic />
+              <h3>A conversation, with context</h3>
               <p>
-                Boot the kernel in QEMU, use the mock responder without a key,
-                or connect Groq. Start small, ask questions, and make the next
-                piece your own.
+                Screen understanding comes first. Voice and text, useful
+                actions, and a more capable agent loop are the next steps toward
+                a desktop that can help.
               </p>
-              <a href={docs}>
-                Start building <Arrow />
+              <a href="#roadmap">
+                Follow the direction <Arrow />
               </a>
             </article>
           </div>
         </section>
-        <section className="journey section-container reveal">
+        <section className="journey section-container reveal" id="auraos">
           <h2>
-            From the first instruction
+            One vision.
             <br />
-            to your next idea
+            Two ways to build toward it.
           </h2>
           <div className="journey-grid">
             {[
               {
                 n: "01",
-                label: "BOOT",
-                title: "A foundation in C + Assembly",
-                text: "Multiboot entry, protected mode, and the first kernel instructions.",
-                href: `${repo}/tree/main/aura-os/boot`,
+                label: "THE STARTING POINT",
+                title: "A screen-aware companion",
+                text: "An Electron prototype that captures a screen on request and returns an AI explanation.",
+                href: overlay,
               },
               {
                 n: "02",
-                label: "UNDERSTAND",
-                title: "A system with context",
-                text: "Memory, timers, and events feed a context-aware AI core.",
-                href: `${repo}/blob/main/aura-os/docs/ai-layer.md`,
+                label: "WHAT WE ARE BUILDING",
+                title: "DRER, the desktop agent",
+                text: "Voice, app and file actions, and tasks that span steps. For Windows, macOS, and Linux.",
+                href: "#roadmap",
               },
               {
                 n: "03",
-                label: "EXPLORE",
-                title: "A different kind of interface",
-                text: "Ask about the kernel, or bring the companion to your desktop.",
-                href: overlay,
+                label: "THE LONG-TERM VISION",
+                title: "AuraOS, the agentic OS",
+                text: "A separate research kernel exploring what it means to put AI inside the operating system.",
+                href: kernelDocs,
               },
             ].map((x) => (
               <a className="journey-card" href={x.href} key={x.n}>
@@ -1174,28 +1210,28 @@ export default function Home() {
           </div>
         </section>
         <section className="guides section-container reveal" id="get-started">
-          <h2>Get started with quick guides</h2>
+          <h2>Start exploring. Start building.</h2>
           <div className="guide-grid">
             <Walkthrough />
-            <a className="guide-card" href={docs}>
+            <a className="guide-card" href={overlay}>
               <div>
-                <span className="tiny-label">[ GUIDE ]</span>
-                <h3>Your first boot</h3>
-                <p>Build and run AuraOS in QEMU.</p>
+                <span className="tiny-label">[ DESKTOP PROTOTYPE ]</span>
+                <h3>Try the starting point</h3>
+                <p>Screen capture, context, and a floating overlay.</p>
               </div>
               <div className="guide-icon">
-                <Cpu size={29} />
+                <Monitor size={29} />
               </div>
               <Arrow />
             </a>
-            <a className="guide-card" href={overlay}>
+            <a className="guide-card" href={repo}>
               <div>
-                <span className="tiny-label">[ GUIDE ]</span>
-                <h3>Meet your companion</h3>
-                <p>Set up the AuraAI desktop overlay.</p>
+                <span className="tiny-label">[ OPEN SOURCE ]</span>
+                <h3>Build what comes next</h3>
+                <p>Explore the source and contribute.</p>
               </div>
-              <div className="guide-icon lilac">
-                <AuraMark />
+              <div className="guide-icon warm">
+                <DrerMark />
               </div>
               <Arrow />
             </a>
@@ -1206,49 +1242,45 @@ export default function Home() {
           <div className="cta-orbit orbit-one" />
           <div className="cta-orbit orbit-two" />
           <h2>
-            Build something
-            <br />
-            from the inside out.
+            A little less friction.
+            <br />A lot more possibility.
           </h2>
-          <p>Start with a little curiosity.</p>
+          <p>Help build an agent for everyone’s computer.</p>
           <div className="hero-actions">
-            <a href={docs} className="button button-white">
-              <Cpu size={17} /> Build AuraOS <Download size={15} />
-            </a>
             <a href={overlay} className="button button-white">
-              <Monitor size={17} /> Get AuraAI <Arrow />
+              <Monitor size={17} /> Explore the prototype <Arrow />
+            </a>
+            <a href={repo} className="button button-white">
+              <Github size={17} /> Contribute <Arrow />
             </a>
             <CopyCommand compact />
           </div>
           <div className="cta-mark">
-            <AuraMark />
+            <DrerMark />
           </div>
         </section>
       </main>
       <footer className="footer section-container">
         <div className="footer-main">
-          <a href="#" className="logo" aria-label="AuraOS home">
-            <span className="logo-outline">AURAOS</span>
+          <a href="#" className="logo" aria-label="DRER home">
+            <span className="logo-outline">DRER</span>
           </a>
           <div className="footer-columns">
             {[
               {
                 title: "PRODUCT",
                 links: [
-                  ["AuraOS kernel", `${repo}/tree/main/aura-os`],
-                  ["AuraAI companion", overlay],
-                  ["AI layer", `${repo}/blob/main/aura-os/docs/ai-layer.md`],
-                  ["Roadmap", `${repo}/tree/main/aura-os#roadmap`],
+                  ["Desktop agent", "#intelligence"],
+                  ["Screen companion", overlay],
+                  ["Windows, macOS, Linux", "#platforms"],
+                  ["AuraOS", kernelDocs],
                 ],
               },
               {
                 title: "EXPLORE",
                 links: [
-                  [
-                    "Architecture",
-                    `${repo}/blob/main/aura-os/docs/architecture.md`,
-                  ],
-                  ["Build guide", docs],
+                  ["Roadmap", "#roadmap"],
+                  ["Get started", "#get-started"],
                   ["Source code", repo],
                   ["Questions", "#faq"],
                 ],
@@ -1292,7 +1324,7 @@ export default function Home() {
             Created by{" "}
             <a href="https://preciousadedokun.com.ng">Precious Adedokun</a>
           </span>
-          <span>Experimental software. Built in the open.</span>
+          <span>DRER · Open source · In development</span>
           <a href={repo}>
             View source <Arrow />
           </a>
