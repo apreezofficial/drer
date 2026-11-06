@@ -1,16 +1,15 @@
 /*
  * Tailwind v4 (no preflight). Cascade layers, lowest to highest priority:
  * theme < base < legacy < components < utilities.
- * The pre-Tailwind hand-written CSS lives in `legacy` (legacy.css, pages.css,
- * navigation.css) so utility classes always win over it. Migrate a component
- * by switching its markup to utilities and deleting its old rules.
+ * The pre-Tailwind hand-written CSS lives in `legacy` (legacy.css, pages.css)
+ * so utility classes always win over it. Migrate a component by switching its
+ * markup to utilities and deleting its old rules. The navbar is fully migrated.
  */
 @layer theme, base, legacy, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "./legacy.css" layer(legacy);
 @import "./pages.css" layer(legacy);
-@import "./navigation.css" layer(legacy);
 
 /* Palette tokens (defined in :root in legacy.css) exposed as utilities. */
 @theme inline {
@@ -22,4 +21,16 @@
   --color-line: var(--border);
   --font-display: var(--display);
   --font-body: var(--body);
+
+  --animate-nav-in: nav-in 0.2s ease-out;
+  @keyframes nav-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
