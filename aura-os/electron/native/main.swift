@@ -24,6 +24,13 @@ func emit(_ result: [String:Any], code:Int32 = 0) -> Never {
     if let data=try? JSONSerialization.data(withJSONObject:result,options:[.sortedKeys]),let text=String(data:data,encoding:.utf8) { print(text) }
     exit(code)
 }
+if CommandLine.arguments.contains("--listen") {
+    let voiceApp=NSApplication.shared
+    voiceApp.setActivationPolicy(.accessory)
+    Task { @MainActor in let listener=VoiceListener();await listener.start() }
+    voiceApp.run()
+    exit(0)
+}
 let store = EKEventStore()
 let app = NSApplication.shared
 app.setActivationPolicy(.accessory)

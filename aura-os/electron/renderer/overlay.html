@@ -17,6 +17,8 @@
         <p class="eyebrow">YOUR ASSISTANT</p>
         <button class="nav active" id="nav-chat">Conversation</button
         ><button class="nav" id="nav-settings">Settings</button>
+        <button class="nav" id="voice-toggle">Enable voice</button>
+        <p id="voice-status" role="status">Voice off</p>
         <div class="sidebar-bottom">
           <span class="status-dot"></span> Running on
           <span id="platform-name">your computer</span
@@ -122,6 +124,38 @@
             <button type="submit" id="save-settings">Save settings</button>
             <p id="settings-status" role="status"></p>
           </form>
+          <form id="voice-form" class="permission-card">
+            <h2>Your voice assistant</h2>
+            <label for="wake-name">Wake name</label
+            ><input
+              id="wake-name"
+              value="Buddy"
+              maxlength="24"
+              placeholder="Buddy"
+            />
+            <p class="field-help">
+              Say “Hey Buddy, open Mail”, or “Hey Buddy”, wait for “Yes?”, then
+              speak your request. English speech recognition runs on your Mac.
+            </p>
+            <label for="spoken-voice">Reply voice</label
+            ><select id="spoken-voice">
+              <option value="">System default</option>
+            </select>
+            <label
+              ><input type="checkbox" id="spoken-replies" checked /> Speak my
+              results aloud</label
+            >
+            <button type="submit">Save voice settings</button
+            ><button type="button" id="voice-preview">Hear a sample</button>
+            <p id="voice-settings-status" role="status"></p>
+            <p class="field-help">
+              Enable voice in the sidebar to grant microphone and Speech
+              Recognition access. It stays active while the window is hidden;
+              turn it off there or quit DRER to stop listening. Voice starts off
+              each time DRER launches. Audio is not sent to Groq; commands
+              needing AI send only their text.
+            </p>
+          </form>
           <div class="permission-card">
             <h2>Screen access</h2>
             <p id="screen-status">Checking…</p>
@@ -134,10 +168,10 @@
           <div class="permission-card">
             <h2>What works in this build</h2>
             <p>
-              Local reminders and notifications, notes, calendar import drafts,
-              a working habit-tracker starter, web-search opening, and Groq chat
-              / vision when configured. Voice activation, native calendar sync,
-              and autonomous computer control are not implemented.
+              Native Apple Reminders and Calendar events, installed-app
+              launching, Spotify playback, notes, web searches, and Groq chat /
+              vision. Optional English voice mode listens for your chosen wake
+              name. General autonomous computer control is still in development.
             </p>
           </div>
         </section>

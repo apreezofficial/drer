@@ -295,3 +295,72 @@ window.drer.on("test:result", (data) => {
 });
 
 window.drer.on("config:ready", () => refresh());
+
+let voiceEnabled = false,
+  voiceLoaded = false;
+async function loadVoiceSettings() {
+  const cfg = await window.drer.state();
+  const options = cfg.voice || {};
+  $("wake-name").value = options.wakeName || "Buddy";
+  $("spoken-replies").checked = options.spokenReplies !== false;
+  if (!voiceLoaded) {
+    for (const item of await window.drer.voices()) {
+      const option = document.createElement("option");
+      option.value = item.name;
+      option.textContent = item.name + " · " + item.language;
+      $("spoken-voice").append(option);
+    }
+    voiceLoaded = true;
+  }
+  $("spoken-voice").value = options.voice || "";
+}
+$("nav-settings").addEventListener("click", () =>
+  loadVoiceSettings().catch(
+    (e) => ($("voice-settings-status").textContent = e.message),
+  ),
+);
+$("voice-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await window.drer.configureVoice({
+      wakeName: $("wake-name").value,
+      voice: $("spoken-voice").value,
+      spokenReplies: $("spoken-replies").checked,
+    });
+    $("voice-settings-status").textContent = "Voice settings saved.";
+  } catch (error) {
+    $("voice-settings-status").textContent = error.message;
+  }
+});
+$("voice-preview").addEventListener("click", async () => {
+  try {
+    await window.drer.previewVoice();
+  } catch (error) {
+    $("voice-settings-status").textContent = error.message;
+  }
+});
+$("voice-toggle").addEventListener("click", async () => {
+  try {
+    const result = await window.drer.toggleVoice(!voiceEnabled);
+    voiceEnabled = result.enabled;
+    $("voice-toggle").textContent = voiceEnabled
+      ? "Turn voice off"
+      : "Enable voice";
+  } catch (error) {
+    $("voice-status").textContent = error.message;
+  }
+});
+window.drer.on("voice:state", (data) => {
+  voiceEnabled = data.enabled;
+  $("voice-toggle").textContent = data.enabled
+    ? "Turn voice off"
+    : "Enable voice";
+  $("voice-status").textContent = data.text;
+});
+window.drer.on("voice:heard", (data) =>
+  message("user", data.question + " [voice]"),
+);
+window.drer.on("voice:result", renderResult);
+window.drer.on("voice:wake", () => {
+  $("voice-status").textContent = "Yes? Listening for your request…";
+});

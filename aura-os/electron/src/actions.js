@@ -119,7 +119,13 @@ function parseRequest(input, now = Date.now()) {
           ? "pause"
           : music[1].toLowerCase(),
     };
-  const application = text.match(
+  const appText = text
+    .replace(
+      /^(?:(?:hey|hi)[, ]+)?(?:(?:can|could|would)\s+(?:you|yo|u)\s+)?(?:please\s+)?/i,
+      "",
+    )
+    .replace(/^(?:opne|opn|opeen)\b/i, "open");
+  const application = appText.match(
     /^(?:open|launch|start)\s+(?:the\s+)?(.+?)(?:\s+(?:app|application|for me))?[.!]?$/i,
   );
   if (

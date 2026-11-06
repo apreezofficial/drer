@@ -24,7 +24,7 @@ The macOS build is `dist/mac-arm64/DRER.app`. Copy it to Applications. This loca
 
 ## Permissions and AI
 
-Each user grants their own macOS permissions when needed: Reminders, Calendar, Spotify Automation, and Screen Recording. Denied permissions produce errors; DRER does not bypass them. App launching alone does not require access to the contents of those apps. Universal app control, wake-word listening, microphone input, and autonomous browsing are not implemented.
+Each user grants their own macOS permissions when needed: Reminders, Calendar, Spotify Automation, and Screen Recording. Denied permissions produce errors; DRER does not bypass them. App launching alone does not require access to the contents of those apps. Universal app control and autonomous browsing are not implemented.
 
 For flexible natural-language requests, open **Settings**, paste your own Groq API key, and save. The key is encrypted using Electron safeStorage in your local DRER profile and decrypted only when an AI request needs it; macOS may show a Keychain prompt. It is never included in the application bundle. Common actions above work without a key. Screen context is sent to Groq only when explicitly selected; screen reading still requires a separate successful permission test.
 
@@ -40,3 +40,13 @@ DRER_EXECUTABLE=/Applications/DRER.app/Contents/MacOS/DRER npm run test:desktop
 ```
 
 The desktop integration test exercises the renderer preload/IPC request connection and uses a temporary profile and your locally encrypted configuration, creates actual named test reminders/events, opens Calculator and Mail, calls the live model, records the actual renderer, quits DRER, and verifies reminders from a separate native process. Outputs are in ignored `test-results/native-system`. This test changes native app data; it does not mock successful actions.
+
+## Voice mode on macOS
+
+In Settings, choose a wake name such as **Buddy**, a reply voice from the installed macOS voices, and whether results are spoken. Save, then use **Hear a sample**. Turn on **Enable voice** in the sidebar and grant macOS Microphone and Speech Recognition permissions. Voice starts disabled at each app launch.
+
+Say “Hey Buddy, open Mail”, or say “Hey Buddy”, wait for “Yes?”, then speak a command within 12 seconds. Voice keeps working when the window is hidden while DRER runs. Turn voice off in the sidebar or quit DRER to stop listening. Recognition pauses during spoken replies to avoid hearing itself.
+
+The listener requires English on-device recognition and available macOS speech assets; it reports an error rather than falling back to cloud audio recognition. Wake-name detection is software speech recognition, not Siri’s hardware wake detection. Audio is not sent to Groq; an AI request sends the recognized command text.
+
+`node scripts/voice-upgrade-test.cjs` checks the exact Asphalt typo through real renderer IPC, settings persistence, installed voice discovery, and native speech output. Unit tests cover wake gating and its follow-up timeout. Live microphone recognition must be tested separately with a person speaking and granting permissions; synthetic command tests do not establish microphone accuracy.
