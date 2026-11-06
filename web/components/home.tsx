@@ -1,22 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { DrerMark } from "./brand";
 import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
   Check,
-  ChevronDown,
   Code2,
   Copy,
-  Cpu,
-  Download,
-  ExternalLink,
-  FileCode2,
-  GitBranch,
   Github,
   Layers3,
-  Menu,
   Monitor,
   Mic,
   CalendarDays,
@@ -29,7 +23,6 @@ import {
   Globe,
   Pause,
   Play,
-  Search,
   ShieldCheck,
   Sparkles,
   Terminal,
@@ -42,29 +35,6 @@ const kernelDocs = `${repo}/blob/main/aura-os/docs/run.md`;
 const overlay = `${repo}/tree/main/aura-os/electron`;
 const command = "git clone https://github.com/apreezofficial/drer.git";
 
-function DrerMark({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={`aura-mark ${className}`}
-      viewBox="0 0 40 40"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M20 3 36 32H4L20 3Z"
-        stroke="currentColor"
-        strokeWidth="5"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m13 32 7-13 7 13"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 function Arrow() {
   return <ArrowUpRight size={16} aria-hidden="true" />;
 }
@@ -140,300 +110,6 @@ function AnimatedTitle() {
       </span>
       <span className="title-caret" aria-hidden="true" />
     </h1>
-  );
-}
-const searchItems = [
-  {
-    title: "DRER desktop assistant",
-    description: "Voice, connected tools, and the desktop prototype",
-    href: overlay,
-  },
-  {
-    title: "Windows, macOS, and Linux",
-    description: "Explore the platform build targets",
-    href: "#platforms",
-  },
-  {
-    title: "Agent roadmap",
-    description:
-      "Wake phrase, calendars, reminders, automations, and building apps",
-    href: "#roadmap",
-  },
-  {
-    title: "Calendars and reminders",
-    description: "Plan your week and follow up on what matters",
-    href: "#calendar",
-  },
-  {
-    title: "Vibe-build with DRER",
-    description: "Describe an app, preview it, and refine it",
-    href: "#build",
-  },
-  {
-    title: "Recurring automations",
-    description: "Daily briefings and routines across connected tools",
-    href: "#calendar",
-  },
-  {
-    title: "AuraOS research kernel",
-    description: "The long-term AI-native operating system",
-    href: kernelDocs,
-  },
-  {
-    title: "Source code",
-    description: "Build and contribute on GitHub",
-    href: repo,
-  },
-];
-
-function Header() {
-  const [menu, setMenu] = useState(false);
-  const [dropdown, setDropdown] = useState<string | null>(null);
-  const [search, setSearch] = useState(false);
-  const [query, setQuery] = useState("");
-  const searchInput = useRef<HTMLInputElement>(null);
-  const searchTrigger = useRef<HTMLButtonElement>(null);
-  function closeSearch() {
-    setSearch(false);
-    searchTrigger.current?.focus();
-  }
-  useEffect(() => {
-    function key(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setMenu(false);
-        setDropdown(null);
-        setSearch(false);
-        searchTrigger.current?.focus();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setSearch((v) => !v);
-      }
-    }
-    window.addEventListener("keydown", key);
-    return () => window.removeEventListener("keydown", key);
-  }, []);
-  useEffect(() => {
-    if (search) searchInput.current?.focus();
-    document.body.style.overflow = search || menu ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [search, menu]);
-  return (
-    <>
-      <header className="site-header">
-        <a className="logo" href="#" aria-label="DRER home">
-          <DrerMark />
-          <span className="logo-outline">DRER</span>
-        </a>
-        <nav className="desktop-nav" aria-label="Main navigation">
-          <a href="#intelligence">AGENT</a>
-          <div
-            className="nav-dropdown"
-            onMouseEnter={() => setDropdown("apps")}
-            onMouseLeave={() => setDropdown(null)}
-          >
-            <button
-              aria-expanded={dropdown === "apps"}
-              onClick={() => setDropdown(dropdown === "apps" ? null : "apps")}
-            >
-              APPS <ChevronDown size={13} />
-            </button>
-            {dropdown === "apps" && (
-              <div className="dropdown-panel">
-                <a href="#companion" onClick={() => setDropdown(null)}>
-                  <Monitor size={19} />
-                  <span>
-                    DRER desktop
-                    <small>The assistant for your existing OS</small>
-                  </span>
-                  <Arrow />
-                </a>
-                <a href="#auraos" onClick={() => setDropdown(null)}>
-                  <Cpu size={19} />
-                  <span>
-                    AuraOS<small>The long-term operating system</small>
-                  </span>
-                  <Arrow />
-                </a>
-              </div>
-            )}
-          </div>
-          <a href="#platforms">PLATFORMS</a>
-          <a href={docs}>DOCS</a>
-          <a href={repo}>
-            COMMUNITY <Arrow />
-          </a>
-          <div
-            className="nav-dropdown"
-            onMouseEnter={() => setDropdown("resources")}
-            onMouseLeave={() => setDropdown(null)}
-          >
-            <button
-              aria-expanded={dropdown === "resources"}
-              onClick={() =>
-                setDropdown(dropdown === "resources" ? null : "resources")
-              }
-            >
-              RESOURCES <ChevronDown size={13} />
-            </button>
-            {dropdown === "resources" && (
-              <div className="dropdown-panel">
-                {searchItems.slice(0, 4).map((x) => (
-                  <a
-                    key={x.title}
-                    href={x.href}
-                    onClick={() => setDropdown(null)}
-                  >
-                    <span>
-                      {x.title}
-                      <small>{x.description}</small>
-                    </span>
-                    <Arrow />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </nav>
-        <div className="header-actions">
-          <button
-            ref={searchTrigger}
-            className="icon-button search-button"
-            aria-label="Search documentation"
-            onClick={() => {
-              setSearch(true);
-              setQuery("");
-            }}
-          >
-            <Search size={20} />
-          </button>
-          <a className="button button-outline header-source" href={repo}>
-            SOURCE <Github size={14} />
-          </a>
-          <a className="button button-white header-build" href="#get-started">
-            GET STARTED
-          </a>
-          <button
-            className="mobile-toggle icon-button"
-            onClick={() => setMenu(!menu)}
-            aria-label={menu ? "Close menu" : "Open menu"}
-            aria-expanded={menu}
-          >
-            {menu ? <X /> : <Menu />}
-          </button>
-        </div>
-      </header>
-      {menu && (
-        <nav className="mobile-nav" aria-label="Mobile navigation">
-          {[
-            ["The agent", "#intelligence"],
-            ["Desktop companion", "#companion"],
-            ["Windows, macOS, Linux", "#platforms"],
-            ["Roadmap", "#roadmap"],
-            ["Calendars & routines", "#calendar"],
-            ["Vibe-building", "#build"],
-            ["AuraOS", "#auraos"],
-            ["Documentation", docs],
-            ["Get started", "#get-started"],
-          ].map(([label, href]) => (
-            <a href={href} key={label} onClick={() => setMenu(false)}>
-              {label}
-              <Arrow />
-            </a>
-          ))}
-          <button
-            onClick={() => {
-              setMenu(false);
-              setQuery("");
-              setSearch(true);
-            }}
-          >
-            Search documentation <Search size={19} />
-          </button>
-        </nav>
-      )}
-      {dropdown && (
-        <button
-          className="dropdown-dismiss"
-          aria-label="Close navigation menu"
-          onClick={() => setDropdown(null)}
-        />
-      )}
-      {search && (
-        <div className="modal-backdrop" onClick={closeSearch}>
-          <section
-            className="search-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Search DRER documentation"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key === "Tab") {
-                const focusable =
-                  e.currentTarget.querySelectorAll<HTMLElement>(
-                    "input,button,a",
-                  );
-                const first = focusable[0],
-                  last = focusable[focusable.length - 1];
-                if (e.shiftKey && document.activeElement === first) {
-                  e.preventDefault();
-                  last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                  e.preventDefault();
-                  first.focus();
-                }
-              }
-            }}
-          >
-            <div className="search-field">
-              <Search size={21} />
-              <input
-                ref={searchInput}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search DRER..."
-                aria-label="Search"
-              />
-              <button
-                className="icon-button"
-                onClick={closeSearch}
-                aria-label="Close search"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="search-results">
-              {searchItems
-                .filter((x) =>
-                  `${x.title} ${x.description}`
-                    .toLowerCase()
-                    .includes(query.toLowerCase()),
-                )
-                .map((x) => (
-                  <a href={x.href} key={x.title} onClick={closeSearch}>
-                    <FileCode2 size={20} />
-                    <div>
-                      {x.title}
-                      <small>{x.description}</small>
-                    </div>
-                    <Arrow />
-                  </a>
-                ))}
-              {!searchItems.some((x) =>
-                `${x.title} ${x.description}`
-                  .toLowerCase()
-                  .includes(query.toLowerCase()),
-              ) && <p>No results. Try “desktop” or “Windows”.</p>}
-            </div>
-            <div className="search-hint">
-              Search the project documentation <kbd>esc</kbd> to close
-            </div>
-          </section>
-        </div>
-      )}
-    </>
   );
 }
 const demoScenarios = [
@@ -886,7 +562,7 @@ function FeatureIntroduction() {
     </div>
   );
 }
-function VoiceVisual() {
+export function VoiceVisual() {
   return (
     <div className="voice-visual">
       <div className="voice-label">
@@ -911,7 +587,7 @@ function VoiceVisual() {
     </div>
   );
 }
-function CalendarVisual() {
+export function CalendarVisual() {
   return (
     <div className="calendar-visual">
       <div className="calendar-heading">
@@ -951,7 +627,7 @@ function CalendarVisual() {
     </div>
   );
 }
-function BuildVisual() {
+export function BuildVisual() {
   const [view, setView] = useState("preview");
   return (
     <div className="build-visual">
@@ -1011,7 +687,7 @@ function BuildVisual() {
     </div>
   );
 }
-function PlatformVisual() {
+export function PlatformVisual() {
   const [platform, setPlatform] = useState("Windows");
   return (
     <div className="backend-visual">
@@ -1248,10 +924,6 @@ export default function Home() {
   }, []);
   return (
     <>
-      <a href="#main" className="skip-link">
-        Skip to content
-      </a>
-      <Header />
       <main id="main">
         <section className="hero section-container">
           <div className="hero-main">
@@ -1264,7 +936,7 @@ export default function Home() {
               Windows, macOS, and Linux.
             </p>
             <div className="hero-actions">
-              <a href="#get-started" className="button button-orange">
+              <a href="/get-started" className="button button-orange">
                 <Monitor size={18} /> Explore DRER <ArrowDown size={15} />
               </a>
               <a href={repo} className="button button-outline">
@@ -1523,78 +1195,6 @@ export default function Home() {
           </div>
         </section>
       </main>
-      <footer className="footer section-container">
-        <div className="footer-main">
-          <a href="#" className="logo" aria-label="DRER home">
-            <span className="logo-outline">DRER</span>
-          </a>
-          <div className="footer-columns">
-            {[
-              {
-                title: "PRODUCT",
-                links: [
-                  ["Desktop agent", "#intelligence"],
-                  ["Screen companion", overlay],
-                  ["Windows, macOS, Linux", "#platforms"],
-                  ["AuraOS", kernelDocs],
-                ],
-              },
-              {
-                title: "EXPLORE",
-                links: [
-                  ["Roadmap", "#roadmap"],
-                  ["Calendars & routines", "#calendar"],
-                  ["Vibe-building", "#build"],
-                  ["Get started", "#get-started"],
-                  ["Source code", repo],
-                  ["Questions", "#faq"],
-                ],
-              },
-              {
-                title: "RESOURCES",
-                links: [
-                  ["Documentation", docs],
-                  ["Report an issue", `${repo}/issues`],
-                  ["Creator", "https://preciousadedokun.com.ng"],
-                  ["Design reference", "https://kiro.dev/"],
-                ],
-              },
-            ].map((col) => (
-              <div key={col.title}>
-                <h3>{col.title}</h3>
-                {col.links.map(([name, href]) => (
-                  <a key={name} href={href}>
-                    {name}
-                  </a>
-                ))}
-              </div>
-            ))}
-            <div>
-              <h3>SOCIAL</h3>
-              <a className="social-icon" href={repo} aria-label="GitHub">
-                <Github size={20} />
-              </a>
-              <a
-                className="social-icon"
-                href="https://preciousadedokun.com.ng"
-                aria-label="Creator website"
-              >
-                <ExternalLink size={19} />
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>
-            Created by{" "}
-            <a href="https://preciousadedokun.com.ng">Precious Adedokun</a>
-          </span>
-          <span>DRER · Open source · In development</span>
-          <a href={repo}>
-            View source <Arrow />
-          </a>
-        </div>
-      </footer>
     </>
   );
 }

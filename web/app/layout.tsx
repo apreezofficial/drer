@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./pages.css";
+import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 export const metadata: Metadata = {
   title: "DRER — An open-source agent for your computer",
   description:
@@ -10,7 +13,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
     </html>
   );
 }
