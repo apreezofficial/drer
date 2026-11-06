@@ -804,6 +804,103 @@ function FAQ() {
     </section>
   );
 }
+function LivePlayer() {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    setReduced(prefersReduced);
+    if (prefersReduced) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      },
+      { threshold: 0.35 },
+    );
+    observer.observe(video);
+    return () => observer.disconnect();
+  }, []);
+  function toggle() {
+    const video = ref.current;
+    if (!video) return;
+    if (video.paused) video.play().catch(() => {});
+    else video.pause();
+  }
+  function seek(e: React.MouseEvent<HTMLDivElement>) {
+    const video = ref.current;
+    if (!video || !video.duration) return;
+    e.stopPropagation();
+    const box = e.currentTarget.getBoundingClientRect();
+    video.currentTime =
+      Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)) *
+      video.duration;
+  }
+  return (
+    <div className="live-player" data-playing={playing}>
+      <video
+        ref={ref}
+        className="live-test-video"
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster="/media/drer-macos-live-poster.png"
+        aria-label="Actual DRER macOS integration test recording"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={(e) => {
+          const v = e.currentTarget;
+          setProgress(v.duration ? v.currentTime / v.duration : 0);
+        }}
+        onClick={toggle}
+      >
+        <source src="/media/drer-macos-live.mp4" type="video/mp4" />
+        Your browser does not support video playback.
+      </video>
+      <div className="live-player-bar">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={playing ? "Pause recording" : "Play recording"}
+        >
+          {playing ? (
+            <Pause size={15} fill="currentColor" />
+          ) : (
+            <Play size={15} fill="currentColor" />
+          )}
+        </button>
+        <div
+          className="live-player-track"
+          onClick={seek}
+          role="progressbar"
+          aria-label="Recording progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progress * 100)}
+        >
+          <span style={{ transform: `scaleX(${progress})` }} />
+        </div>
+      </div>
+      {!playing && reduced && (
+        <button
+          type="button"
+          className="live-player-big"
+          onClick={toggle}
+          aria-label="Play recording"
+        >
+          <Play size={30} fill="currentColor" />
+        </button>
+      )}
+    </div>
+  );
+}
 function Walkthrough() {
   const [open, setOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -969,17 +1066,9 @@ export default function Home() {
           className="product-section section-container"
           aria-label="Recorded DRER macOS integration test"
         >
-          <video
-            className="live-test-video"
-            controls
-            playsInline
-            preload="metadata"
-            poster="/media/drer-macos-live-poster.png"
-            aria-label="Actual DRER macOS integration test recording"
-          >
-            <source src="/media/drer-macos-live.mp4" type="video/mp4" />
-            Your browser does not support video playback.
-          </video>
+          <div className="video-frame">
+            <LivePlayer />
+          </div>
           <p className="demo-caption">
             Recorded macOS integration test · real Apple Reminders, a live AI
             tool call, Calculator, and Apple Calendar. Native reminders verified
