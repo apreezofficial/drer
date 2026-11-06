@@ -750,6 +750,142 @@ function Demo() {
     </div>
   );
 }
+function ScrollType({
+  text,
+  intro = false,
+}: {
+  text: string;
+  intro?: boolean;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -15% 0px", threshold: 0 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+  let offset = 0;
+  return (
+    <p
+      ref={ref}
+      className={`${intro ? "feature-intro-text" : "feature-description"} scroll-type ${seen ? "has-entered" : ""}`}
+    >
+      <span className="sr-only">{text}</span>
+      <span aria-hidden="true">
+        {text.split(" ").map((word, i) => {
+          const start = offset;
+          offset += word.length + 1;
+          return (
+            <span className="scroll-word" key={i}>
+              {word.split("").map((char, j) => (
+                <span
+                  key={j}
+                  className="scroll-char"
+                  style={
+                    {
+                      "--char-delay": `${(start + j) * (intro ? 15 : 5)}ms`,
+                    } as React.CSSProperties
+                  }
+                >
+                  {char}
+                </span>
+              ))}{" "}
+            </span>
+          );
+        })}
+      </span>
+      {intro && <span className="intro-cursor" aria-hidden="true" />}
+    </p>
+  );
+}
+function FeatureIntroduction() {
+  const icons = [
+    Mic,
+    CalendarDays,
+    Bell,
+    Repeat2,
+    FolderOpen,
+    WandSparkles,
+    Code2,
+    Sparkles,
+    Globe,
+    Monitor,
+    AppWindow,
+    Terminal,
+    MousePointer2,
+    Layers3,
+    Mic,
+  ];
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const visibility = new IntersectionObserver(([entry]) => {
+      node.dataset.waveActive = String(entry.isIntersecting);
+    });
+    visibility.observe(node);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (reduce.matches) return;
+      const r = node.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight) return;
+      const progress = Math.max(
+        0,
+        Math.min(1, (innerHeight - r.top) / (innerHeight + r.height)),
+      );
+      node.style.setProperty("--strip-travel", `${-150 * progress}px`);
+    };
+    const scroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("resize", scroll);
+    update();
+    return () => {
+      window.removeEventListener("scroll", scroll);
+      window.removeEventListener("resize", scroll);
+      cancelAnimationFrame(frame);
+      visibility.disconnect();
+    };
+  }, []);
+  return (
+    <div className="feature-introduction" ref={ref}>
+      <div className="feature-orbit-strip" aria-hidden="true">
+        <div className="feature-orbit-track">
+          {icons.map((Icon, i) => (
+            <div
+              className="feature-orbit"
+              key={i}
+              style={
+                { "--orbit-delay": `${-i * 0.48}s` } as React.CSSProperties
+              }
+            >
+              <Icon strokeWidth={1.4} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="section-container">
+        <ScrollType
+          intro
+          text="DRER is an open-source assistant for your computer and connected tools. Call it to plan your day, remember what matters, automate a routine, or build your next idea."
+        />
+      </div>
+    </div>
+  );
+}
 function VoiceVisual() {
   return (
     <div className="voice-visual">
@@ -1166,95 +1302,91 @@ export default function Home() {
             calendars, reminders, routines, and software-building are planned.
           </p>
         </section>
-        <section className="features section-container" id="intelligence">
-          <article className="feature-row reveal" id="companion">
-            <div className="feature-copy">
-              <h2>
-                Call it. Say it.
-                <br />
-                Keep moving.
-              </h2>
-              <p>
-                “Hey DRER, help me plan my day.” A wake phrase, a shortcut, or a
-                typed request should be enough to start. We are building toward
-                an assistant that understands your intent and works with the
-                tools you choose to connect.
-              </p>
-              <a className="text-link" href={overlay}>
-                Explore the current prototype <Arrow />
-              </a>
-            </div>
-            <div className="feature-art">
-              <VoiceVisual />
-            </div>
-          </article>
-          <article className="feature-row reveal" id="calendar">
-            <div className="feature-copy">
-              <h2>
-                Your calendar. Your reminders.
-                <br />A little more breathing room.
-              </h2>
-              <p>
-                Find focus time around meetings. Remember a deadline. Ask for a
-                morning briefing every weekday.{" "}
-                <a href="#calendar">
-                  Calendars, reminders, and recurring automations
-                </a>{" "}
-                are central to the DRER vision: useful help that follows your
-                day, not just the window you have open.
-              </p>
-              <a className="text-link" href={repo}>
-                Help build the agent <Arrow />
-              </a>
-            </div>
-            <div className="feature-art">
-              <CalendarVisual />
-            </div>
-          </article>
-          <article className="feature-row reveal" id="build">
-            <div className="feature-copy">
-              <h2>
-                An idea in your head.
-                <br />
-                An app you can shape.
-              </h2>
-              <p>
-                “DRER, build me a habit tracker.” Describe what you want, let
-                the agent help create a first version, then preview and refine
-                it together. <a href="#build">Vibe-building</a> belongs
-                alongside everyday tasks: build a website, make a small tool, or
-                turn a rough idea into something you can try.
-              </p>
-              <a className="text-link" href="#faq">
-                See what works today <Arrow />
-              </a>
-            </div>
-            <div className="feature-art">
-              <BuildVisual />
-            </div>
-          </article>
-          <article className="feature-row reveal" id="platforms">
-            <div className="feature-copy">
-              <h2>
-                Your assistant.
-                <br />
-                Your operating system.
-              </h2>
-              <p>
-                Windows, macOS, and Linux are all part of the plan. The existing
-                Electron foundation includes{" "}
-                <a href={overlay}>NSIS, DMG, and AppImage build targets</a>. We
-                are working toward the native permissions, integrations, and
-                testing each platform needs.
-              </p>
-              <a className="text-link" href={overlay}>
-                Explore platform setup <Arrow />
-              </a>
-            </div>
-            <div className="feature-art">
-              <PlatformVisual />
-            </div>
-          </article>
+        <section
+          className="features"
+          id="intelligence"
+          aria-label="Explore DRER features"
+        >
+          <FeatureIntroduction />
+          <div className="feature-explorer section-container">
+            <article className="feature-row" id="companion">
+              <div className="feature-copy">
+                <span className="feature-kicker">01 / CALL YOUR ASSISTANT</span>
+                <h2>Just say, “Hey DRER.”</h2>
+                <ScrollType text="Start with a wake phrase, a shortcut, or a typed request. DRER is being built to understand your intent and help across your desktop and connected tools, whether you are planning your day or starting something new." />
+                <a className="text-link" href={overlay}>
+                  Explore the current prototype <Arrow />
+                </a>
+              </div>
+              <div className="feature-art feature-voice">
+                <VoiceVisual />
+              </div>
+            </article>
+            <article className="feature-row" id="calendar">
+              <div className="feature-copy">
+                <span className="feature-kicker">
+                  02 / PLAN, REMEMBER, AUTOMATE
+                </span>
+                <h2>
+                  A little more room
+                  <br />
+                  in your day.
+                </h2>
+                <ScrollType text="Find focus time around meetings, remember a deadline, or ask for a morning briefing every weekday. Connected calendars, reminders, and recurring routines are central to the DRER vision: useful help that moves with your life." />
+                <a className="text-link" href="#roadmap">
+                  Explore the direction <Arrow />
+                </a>
+              </div>
+              <div className="feature-art feature-calendar">
+                <CalendarVisual />
+              </div>
+            </article>
+            <article className="feature-row" id="build">
+              <div className="feature-copy">
+                <span className="feature-kicker">
+                  03 / VIBE-BUILD WHAT YOU IMAGINE
+                </span>
+                <h2>
+                  Your idea.
+                  <br />A first version.
+                </h2>
+                <ScrollType text="“DRER, build me a habit tracker.” Describe the app, website, or small tool you have in mind. The goal is to help turn that description into a working first version you can preview, check, and refine together." />
+                <a className="text-link" href="#get-started">
+                  Help build what comes next <Arrow />
+                </a>
+              </div>
+              <div className="feature-art feature-build">
+                <BuildVisual />
+              </div>
+            </article>
+            <article className="feature-row" id="platforms">
+              <div className="feature-copy">
+                <span className="feature-kicker">
+                  04 / YOUR COMPUTER, YOUR CHOICE
+                </span>
+                <h2>
+                  Windows. macOS.
+                  <br />
+                  Linux. DRER.
+                </h2>
+                <ScrollType text="An assistant for the computer you already use. Windows, macOS, and Linux are all part of the plan. The Electron foundation includes build targets for each; native permissions, integrations, and platform validation are still in development." />
+                <a
+                  className="button button-outline feature-explore-button"
+                  href={overlay}
+                >
+                  Explore the project <Arrow />
+                </a>
+              </div>
+              <div className="feature-art feature-platform">
+                <PlatformVisual />
+              </div>
+            </article>
+          </div>
+          <p className="feature-development-note section-container">
+            Product concepts · voice, connected tools, automations, and
+            software-building are planned. The current prototype provides screen
+            capture and AI explanations.
+          </p>
         </section>
         <section className="principles section-container reveal" id="roadmap">
           <h2>Built around the way you work</h2>
