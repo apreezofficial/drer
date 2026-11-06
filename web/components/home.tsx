@@ -114,7 +114,7 @@ function CopyCommand({ compact = false }: { compact?: boolean }) {
   );
 }
 function AnimatedTitle() {
-  const text = "Say what you need. Let DRER take it from there.";
+  const text = "Not everything needs your hands. Let your fingers rest.";
   let offset = 0;
   return (
     <h1 aria-label={text}>
@@ -1257,10 +1257,11 @@ export default function Home() {
           <div className="hero-main">
             <AnimatedTitle />
             <p className="hero-description">
-              Call DRER by name. Plan your week, remember the little things,
-              automate a routine, or build the app you have in mind. An
-              open-source assistant taking shape across Windows, macOS, and
-              Linux.
+              From reading screens and capturing captions to browsing,
+              researching, managing calendars, setting alarms, and organizing
+              meetings—DRER is being built to turn everyday requests into
+              action. Call it by name and put your routines on autopilot, across
+              Windows, macOS, and Linux.
             </p>
             <div className="hero-actions">
               <a href="#get-started" className="button button-orange">
