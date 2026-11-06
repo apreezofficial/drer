@@ -429,9 +429,11 @@ function Demo() {
 function ScrollType({
   text,
   intro = false,
+  className,
 }: {
   text: string;
   intro?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [seen, setSeen] = useState(false);
@@ -454,7 +456,7 @@ function ScrollType({
   return (
     <p
       ref={ref}
-      className={`${intro ? "feature-intro-text" : "feature-description"} scroll-type ${seen ? "has-entered" : ""}`}
+      className={`${className ?? (intro ? "feature-intro-text" : "feature-description")} scroll-type ${seen ? "has-entered" : ""}`}
     >
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
@@ -804,6 +806,136 @@ function FAQ() {
     </section>
   );
 }
+const features: Feature[] = [
+  {
+    id: "companion",
+    kicker: "01 / CALL YOUR ASSISTANT",
+    title: <>Just say, “Hey DRER.”</>,
+    text: "Start with a wake phrase, a shortcut, or a typed request. DRER is being built to understand your intent and help across your desktop and connected tools, whether you are planning your day or starting something new.",
+    cta: "Explore the current prototype",
+    href: overlay,
+    tone: "soft",
+  },
+  {
+    id: "calendar",
+    kicker: "02 / PLAN, REMEMBER, AUTOMATE",
+    title: (
+      <>
+        A little more room
+        <br />
+        in your day.
+      </>
+    ),
+    text: "Find focus time around meetings, remember a deadline, or ask for a morning briefing every weekday. Connected calendars, reminders, and recurring routines are central to the DRER vision: useful help that moves with your life.",
+    cta: "Explore the direction",
+    href: "#roadmap",
+    tone: "line",
+  },
+  {
+    id: "build",
+    kicker: "03 / VIBE-BUILD WHAT YOU IMAGINE",
+    title: (
+      <>
+        Your idea.
+        <br />A first version.
+      </>
+    ),
+    text: "“DRER, build me a habit tracker.” Describe the app, website, or small tool you have in mind. The goal is to help turn that description into a working first version you can preview, check, and refine together.",
+    cta: "Help build what comes next",
+    href: "#get-started",
+    tone: "soft",
+  },
+  {
+    id: "platforms",
+    kicker: "04 / YOUR COMPUTER, YOUR CHOICE",
+    title: (
+      <>
+        Windows. macOS.
+        <br />
+        Linux. DRER.
+      </>
+    ),
+    text: "An assistant for the computer you already use. Windows, macOS, and Linux are all part of the plan. The Electron foundation includes build targets for each; native permissions, integrations, and platform validation are still in development.",
+    cta: "Explore the project",
+    href: overlay,
+    tone: "line",
+  },
+];
+/* Features, laid out like cursor.com: a 24-column card, 840px media on the
+   left (cols 1-16) and a 415px text column on the right (cols 17-24). */
+type Feature = {
+  id: string;
+  kicker: string;
+  title: React.ReactNode;
+  text: string;
+  cta: string;
+  href: string;
+  /** Real screenshot to use instead of the demo tile. Add these later. */
+  image?: string;
+  alt?: string;
+  tone: "soft" | "line";
+};
+function DemoImage({ tone, label }: { tone: Feature["tone"]; label: string }) {
+  return (
+    <div
+      className={`relative flex h-full min-h-[320px] items-center justify-center overflow-hidden rounded-[4px] p-[clamp(20px,5vw,64px)] pb-[clamp(36px,6vw,72px)] ${tone === "soft" ? "bg-accent-soft" : "bg-line"}`}
+    >
+      <div className="w-full max-w-[560px] rounded-xl border border-line bg-panel shadow-[0_24px_60px_#0006]">
+        <div className="flex items-center gap-1.5 border-b border-line px-4 py-3">
+          <span className="size-2.5 rounded-full bg-line" />
+          <span className="size-2.5 rounded-full bg-line" />
+          <span className="size-2.5 rounded-full bg-line" />
+        </div>
+        <div className="space-y-3 p-5">
+          <div className="h-3 w-2/5 rounded-sm bg-accent" />
+          <div className="h-3 w-full rounded-sm bg-line" />
+          <div className="h-3 w-5/6 rounded-sm bg-line" />
+          <div className="h-3 w-3/5 rounded-sm bg-line" />
+          <div className="mt-5 h-16 rounded-md bg-line" />
+        </div>
+      </div>
+      <span className="absolute bottom-4 left-5 font-display text-[10px] tracking-[1px] text-black/60">
+        DEMO IMAGE · {label}
+      </span>
+    </div>
+  );
+}
+function FeatureCard({ feature: f }: { feature: Feature }) {
+  const type =
+    "font-body text-[16px] leading-6 tracking-[0.08px] text-pretty md:text-[22px] md:leading-[28.6px] md:tracking-[-0.11px]";
+  return (
+    <article
+      id={f.id}
+      className="grid grid-cols-1 rounded-[4px] bg-panel p-[17.5px] lg:grid-cols-24 lg:gap-x-[10px]"
+    >
+      <div className="col-span-full row-start-1 self-center px-[2.5px] py-8 lg:col-span-8 lg:col-start-17 lg:pr-[2.5px] lg:pl-[30px]">
+        <span className="mb-4 block font-display text-[11px] tracking-[1px] text-muted">
+          {f.kicker}
+        </span>
+        <h2 className={`${type} font-normal text-text`}>{f.title}</h2>
+        <ScrollType className={`${type} text-muted`} text={f.text} />
+        <a
+          className="mt-[15px] inline-flex items-center gap-1.5 font-body text-[16px] leading-6 text-accent hover:underline"
+          href={f.href}
+        >
+          {f.cta} <Arrow />
+        </a>
+      </div>
+      <div className="col-span-full row-start-2 mt-7 min-h-[320px] lg:col-span-16 lg:col-start-1 lg:row-start-1 lg:mt-0 lg:min-h-[680px]">
+        {f.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={f.image}
+            alt={f.alt ?? ""}
+            className="h-full w-full rounded-[4px] object-cover"
+          />
+        ) : (
+          <DemoImage tone={f.tone} label={f.id.toUpperCase()} />
+        )}
+      </div>
+    </article>
+  );
+}
 function LivePlayer() {
   const ref = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -1089,79 +1221,10 @@ export default function Home() {
           aria-label="Explore DRER features"
         >
           <FeatureIntroduction />
-          <div className="feature-explorer section-container">
-            <article className="feature-row" id="companion">
-              <div className="feature-copy">
-                <span className="feature-kicker">01 / CALL YOUR ASSISTANT</span>
-                <h2>Just say, “Hey DRER.”</h2>
-                <ScrollType text="Start with a wake phrase, a shortcut, or a typed request. DRER is being built to understand your intent and help across your desktop and connected tools, whether you are planning your day or starting something new." />
-                <a className="text-link" href={overlay}>
-                  Explore the current prototype <Arrow />
-                </a>
-              </div>
-              <div className="feature-art feature-voice">
-                <VoiceVisual />
-              </div>
-            </article>
-            <article className="feature-row" id="calendar">
-              <div className="feature-copy">
-                <span className="feature-kicker">
-                  02 / PLAN, REMEMBER, AUTOMATE
-                </span>
-                <h2>
-                  A little more room
-                  <br />
-                  in your day.
-                </h2>
-                <ScrollType text="Find focus time around meetings, remember a deadline, or ask for a morning briefing every weekday. Connected calendars, reminders, and recurring routines are central to the DRER vision: useful help that moves with your life." />
-                <a className="text-link" href="#roadmap">
-                  Explore the direction <Arrow />
-                </a>
-              </div>
-              <div className="feature-art feature-calendar">
-                <CalendarVisual />
-              </div>
-            </article>
-            <article className="feature-row" id="build">
-              <div className="feature-copy">
-                <span className="feature-kicker">
-                  03 / VIBE-BUILD WHAT YOU IMAGINE
-                </span>
-                <h2>
-                  Your idea.
-                  <br />A first version.
-                </h2>
-                <ScrollType text="“DRER, build me a habit tracker.” Describe the app, website, or small tool you have in mind. The goal is to help turn that description into a working first version you can preview, check, and refine together." />
-                <a className="text-link" href="#get-started">
-                  Help build what comes next <Arrow />
-                </a>
-              </div>
-              <div className="feature-art feature-build">
-                <BuildVisual />
-              </div>
-            </article>
-            <article className="feature-row" id="platforms">
-              <div className="feature-copy">
-                <span className="feature-kicker">
-                  04 / YOUR COMPUTER, YOUR CHOICE
-                </span>
-                <h2>
-                  Windows. macOS.
-                  <br />
-                  Linux. DRER.
-                </h2>
-                <ScrollType text="An assistant for the computer you already use. Windows, macOS, and Linux are all part of the plan. The Electron foundation includes build targets for each; native permissions, integrations, and platform validation are still in development." />
-                <a
-                  className="button button-outline feature-explore-button"
-                  href={overlay}
-                >
-                  Explore the project <Arrow />
-                </a>
-              </div>
-              <div className="feature-art feature-platform">
-                <PlatformVisual />
-              </div>
-            </article>
+          <div className="mx-auto flex w-[calc(100%-140px)] max-w-[1300px] flex-col gap-[90px] max-lg:w-[calc(100%-40px)] max-lg:gap-12">
+            {features.map((feature) => (
+              <FeatureCard key={feature.id} feature={feature} />
+            ))}
           </div>
           <p className="feature-development-note section-container">
             Product concepts · voice, connected tools, automations, and
