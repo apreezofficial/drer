@@ -141,9 +141,25 @@
               placeholder="Buddy"
             />
             <p class="field-help">
-              Say “Buddy, open Mail”, or “Buddy”, wait for “Hmm?”, then speak
-              your request. “Hey” is optional. English speech recognition runs
-              on your Mac.
+              Say “Buddy, open Mail”, or “Buddy”, wait for the greeting, then
+              speak your request. “Hey” is optional. English speech recognition
+              runs on your Mac.
+            </p>
+            <label for="wake-aliases">Also recognize these pronunciations</label
+            ><input id="wake-aliases" placeholder="For example: Test, Tessa" />
+            <p class="field-help">
+              Optional alternatives, separated by commas. Add what appears under
+              “Heard” when you say your wake name.
+            </p>
+            <label for="preferred-name">Your name (optional)</label
+            ><input
+              id="preferred-name"
+              maxlength="50"
+              placeholder="What should I call you?"
+            />
+            <p class="field-help">
+              Wake greeting: “How can I help you today?” Add your name to
+              personalize it.
             </p>
             <label for="spoken-voice">Reply voice</label
             ><select id="spoken-voice">

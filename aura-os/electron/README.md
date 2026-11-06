@@ -43,11 +43,13 @@ The desktop integration test exercises the renderer preload/IPC request connecti
 
 ## Voice mode on macOS
 
-In Settings, choose a wake name such as **Buddy**, a reply voice from the installed macOS voices, and whether results are spoken. Save, then use **Hear a sample**. Turn on **Enable voice** in the sidebar and grant macOS Microphone and Speech Recognition permissions. After you enable voice, it resumes when you reopen DRER.
+In Settings, choose a wake name such as **Buddy**, a reply voice from the installed macOS voices, your preferred name for a personalized greeting, and whether results are spoken. Save, then use **Hear a sample**. Turn on **Enable voice** in the sidebar and grant macOS Microphone and Speech Recognition permissions. After you enable voice, it resumes when you reopen DRER.
 
-Say “Buddy, open Mail”, or say “Buddy”, wait for “Hmm?”, then speak a command within 12 seconds. “Hey” is optional. A microphone meter and the last recognized phrase help diagnose input. Voice keeps working when the window is hidden while DRER runs. Turn voice off in the sidebar or quit DRER to stop listening. Recognition pauses during spoken replies to avoid hearing itself.
+Say “Buddy, open Mail”, or say “Buddy”, wait for “How can I help you today?”, then speak a command within 12 seconds. “Hey” is optional. A microphone meter and the last recognized phrase help diagnose input. Voice keeps working when the window is hidden while DRER runs. Turn voice off in the sidebar or quit DRER to stop listening. Recognition is muted during spoken replies to avoid hearing itself; the microphone and native listener remain running instead of restarting for every response.
 
 Launch the installed app from Finder / Applications for voice testing. Starting its binary directly from a terminal or coding tool can inherit that tool’s macOS privacy identity and prevent the Speech Recognition permission prompt.
+
+If recognition spells your wake name differently, add the observed words to **Also recognize these pronunciations** in Settings. Aliases are optional, local settings and match only at the beginning of a wake phrase.
 
 The listener requires English on-device recognition and available macOS speech assets; it reports an error rather than falling back to cloud audio recognition. Wake-name detection is software speech recognition, not Siri’s hardware wake detection. Audio is not sent to Groq; an AI request sends the recognized command text.
 
