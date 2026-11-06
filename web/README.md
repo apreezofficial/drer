@@ -31,10 +31,12 @@ npm start
 
 ## Design and media
 
-The visual reference is https://kiro.dev/: black background, rounded semi-monospace typography, orange actions, warm apricot product stage, overlapping terminal, alternating feature content, guide cards, questions, and a large closing panel. Fonts were obtained from the reference site's `/styles/fonts/` assets. The page does not embed Kiro scripts, tracking, product screenshots, or Kiro-branded demonstrations.
+The visual reference is https://kiro.dev/: black background, rounded semi-monospace typography, restrained amber actions, cool charcoal product stage, overlapping terminal, alternating feature content, guide cards, questions, and a large closing panel. Fonts were obtained from the reference site's `/styles/fonts/` assets. The page does not embed Kiro scripts, tracking, product screenshots, or Kiro-branded demonstrations.
 
-DRER artwork, the animated agent session, screen capture, task plan, desktop tiles, and walkthrough are purpose-built illustrations. The page labels its demonstrations as illustrative; it does not boot a kernel or connect to an AI service. Source and setup links point to the real project. Desktop screenshot processing is described as cloud inference through Groq.
+DRER artwork, the selectable agent sessions, voice waveform, calendar, app-building preview, and walkthrough are purpose-built illustrations. The page labels its demonstrations as illustrative; it does not boot a kernel or connect to an AI service. Source and setup links point to the real project. Desktop screenshot processing is described as cloud inference through Groq.
 
 The page respects reduced-motion preferences. Video runs only after the visitor opens the walkthrough; terminal playback can be paused. Search opens with the search button or Command/Ctrl+K, and Escape closes the menus and dialogs.
 
-DRER targets Windows, macOS, and Linux. Copy distinguishes the existing screen-aware Electron prototype from planned voice, desktop actions, and multi-step workflows. AuraOS is presented as the separate long-term research OS. The navigation uses the reference’s 13px/500 treatment, display headlines use the actual 700 font, and buttons use a 350ms rising oval fill.
+DRER targets Windows, macOS, and Linux. Copy distinguishes the existing screen-aware Electron prototype from planned wake-phrase activation, calendars, reminders, recurring automations, vibe-building, and desktop actions. AuraOS is presented as the separate long-term research OS. The navigation uses the reference’s 13px/500 treatment, display headlines use the actual 700 font, and buttons use a 350ms rising oval fill.
+
+The main demo has five selectable concepts: calendar planning, reminders, app building, recurring routines, and the existing screen-aware starting point. The app-building feature switches between code and an illustrative habit-tracker preview. Website interactions do not connect real calendars, create reminders, or control the computer.

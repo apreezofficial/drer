@@ -3,7 +3,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "DRER — An open-source agent for your computer",
   description:
-    "An open-source desktop agent in development for Windows, macOS, and Linux. Screen understanding today; voice, desktop actions, and multi-step workflows ahead.",
+    "An open-source assistant in development for Windows, macOS, and Linux. Call DRER to plan, remember, automate, and build with your computer and connected tools.",
 };
 export default function RootLayout({
   children,
