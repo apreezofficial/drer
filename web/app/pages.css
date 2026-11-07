@@ -1,160 +1,5 @@
 /* Shared navigation and editorial product pages. */
-.xnav {
-  position: sticky;
-  top: 0;
-  z-index: 80;
-  background: rgb(7 8 9 / 94%);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid #25282c;
-  font-family: var(--body);
-}
-.xnav-inner {
-  height: 76px;
-  width: min(1440px, calc(100% - 80px));
-  margin: auto;
-  display: flex;
-  align-items: center;
-  gap: 50px;
-}
-.xnav-brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 24px;
-  letter-spacing: -1px;
-  font-family: var(--display);
-  font-weight: 700;
-}
-.xnav-brand .aura-mark {
-  width: 26px;
-  height: 26px;
-}
-.xnav-desktop {
-  display: flex;
-  align-items: center;
-  gap: 29px;
-  height: 100%;
-  font-size: 14px;
-  color: #aeb3b8;
-}
-.xnav-desktop > a {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  position: relative;
-}
-.xnav-desktop > a:hover,
-.xnav-group-label:hover,
-.xnav-desktop [aria-current="page"] {
-  color: #f3f5f4;
-}
-.xnav-desktop > a[aria-current="page"]:after {
-  position: absolute;
-  content: "";
-  height: 1px;
-  background: #e3c19e;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-}
-.xnav-group {
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-.xnav-group-label {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  height: 100%;
-}
-.xnav-group-label > a {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-.xnav-group-label > button {
-  background: none;
-  border: 0;
-  color: inherit;
-  height: 100%;
-  width: 20px;
-  display: grid;
-  place-items: center;
-}
-.xnav-group-label > button svg {
-  transition: transform 0.2s;
-}
-.xnav-group-label > button[aria-expanded="true"] svg {
-  transform: rotate(180deg);
-}
-.xnav-actions {
-  display: flex;
-  align-items: center;
-  gap: 19px;
-  margin-left: auto;
-}
-.xnav-icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 34px;
-  border: 0;
-  background: none;
-  color: #b5bdc5;
-  border-radius: 6px;
-}
-.xnav-icon:hover {
-  background: #25282c;
-  color: white;
-}
-.xnav-github {
-  display: grid;
-  place-items: center;
-  color: #9da5ad;
-}
-.xnav-github:hover {
-  color: white;
-}
-.xnav-cta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: #eeefeb;
-  color: #16191b;
-  border: 1px solid #eeefeb;
-  padding: 9px 16px;
-  border-radius: 4px;
-  font-family: var(--body);
-  font-size: 13px;
-  transition:
-    background 0.2s,
-    color 0.2s;
-}
-.xnav-cta:hover {
-  background: #d3d6d2;
-}
-.xnav-mobile-toggle {
-  display: none;
-}
-.xnav-panel {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  border-bottom: 1px solid #34383d;
-  background: #101215;
-  box-shadow: 0 25px 50px #0006;
-  animation: xnav-in 0.18s ease-out;
-}
-.xnav-panel-inner {
-  width: min(1280px, calc(100% - 112px));
-  margin: auto;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 80px;
-  padding: 43px 0 46px;
-}
+
 .x-eyebrow {
   font-family: var(--display);
   font-size: 10px;
@@ -165,77 +10,7 @@
   align-items: center;
   gap: 8px;
 }
-.xnav-panel-intro > p {
-  font-size: 27px;
-  letter-spacing: -0.8px;
-  line-height: 1.15;
-  color: #e4e7e6;
-  max-width: 310px;
-  margin-top: 18px;
-}
-.xnav-panel-intro > a {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  font-size: 13px;
-  color: #bdc4ca;
-  margin-top: 25px;
-}
-.xnav-panel-links {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 7px 20px;
-}
-.xnav-panel-links > a {
-  display: flex;
-  align-items: start;
-  gap: 14px;
-  padding: 16px 14px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-size: 16px;
-  color: #e7e9e7;
-  transition:
-    background 0.2s,
-    border-color 0.2s;
-}
-.xnav-panel-links > a:hover,
-.xnav-panel-links > a[aria-current="page"] {
-  background: #1c2024;
-  border-color: #32373c;
-}
-.xnav-item-number {
-  font-family: var(--display);
-  font-size: 9px;
-  color: #707d87;
-  padding-top: 5px;
-}
-.xnav-panel-links > a > span:nth-child(2) {
-  flex: 1;
-}
-.xnav-panel-links small {
-  display: block;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #8e9aa4;
-  margin-top: 7px;
-  max-width: 260px;
-}
-.xnav-panel-links > a > svg {
-  margin-top: 4px;
-  color: #76828e;
-}
-.xnav-scrim {
-  position: fixed;
-  z-index: 79;
-  inset: 77px 0 0;
-  background: #0007;
-  backdrop-filter: blur(5px);
-  border: 0;
-}
-.xnav-mobile {
-  display: none;
-}
+
 .xsearch-backdrop {
   position: fixed;
   inset: 0;
@@ -1523,17 +1298,9 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 @media (max-width: 1250px) {
-  .xnav-inner {
-    width: calc(100% - 64px);
-    gap: 35px;
-  }
-  .xnav-desktop {
-    gap: 23px;
-    font-size: 13px;
-  }
-  .xnav-actions {
-    gap: 14px;
-  }
+  
+  
+  
   .page-frame {
     width: calc(100% - 80px);
   }
@@ -1585,43 +1352,16 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 @media (max-width: 1000px) {
-  .xnav-inner {
-    width: calc(100% - 48px);
-    gap: 26px;
-  }
-  .xnav-desktop {
-    gap: 18px;
-    font-size: 12px;
-  }
-  .xnav-actions {
-    gap: 10px;
-  }
-  .xnav-github {
-    display: none;
-  }
-  .xnav-brand {
-    font-size: 22px;
-  }
-  .xnav-cta {
-    font-size: 12px;
-    padding: 8px 12px;
-    gap: 10px;
-  }
-  .xnav-panel-inner {
-    width: calc(100% - 64px);
-    gap: 40px;
-    grid-template-columns: 0.8fr 2fr;
-  }
-  .xnav-panel-intro > p {
-    font-size: 24px;
-  }
-  .xnav-panel-links > a {
-    font-size: 14px;
-    gap: 10px;
-  }
-  .xnav-panel-links small {
-    font-size: 12px;
-  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   .page-frame {
     width: calc(100% - 64px);
   }
@@ -1876,78 +1616,22 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 @media (max-width: 760px) {
-  .xnav-inner {
-    height: 66px;
-    gap: 20px;
-  }
-  .xnav-desktop {
-    display: none;
-  }
-  .xnav-brand {
-    font-size: 21px;
-  }
-  .xnav-brand .aura-mark {
-    width: 24px;
-  }
-  .xnav-mobile-toggle {
-    display: grid;
-  }
-  .xnav-github {
-    display: none;
-  }
-  .xnav-actions {
-    gap: 8px;
-  }
-  .xnav-cta {
-    font-size: 11px;
-    padding: 8px 11px;
-    gap: 8px;
-  }
-  .xnav-icon {
-    width: 30px;
-  }
-  .xnav-mobile {
-    display: block;
-    position: fixed;
-    z-index: 79;
-    inset: 67px 0 0;
-    background: #0e1216;
-    overflow-y: auto;
-    padding: 15px 24px 40px;
-    font-family: var(--body);
-  }
-  .xnav-mobile-main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 25px;
-  }
-  .xnav-mobile-main > a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    border-bottom: 1px solid #2b3a45;
-    padding: 18px 0;
-    font-size: 16px;
-    color: #c6d1d7;
-  }
-  .xnav-mobile-main > a[aria-current="page"] {
-    color: #e9c59f;
-  }
-  .xnav-mobile-main > a > svg {
-    color: #627d90;
-  }
-  .xnav-mobile > p {
-    font-family: var(--display);
-    font-size: 9px;
-    color: #668599;
-    line-height: 1.9;
-    margin-top: 30px;
-  }
-  .xnav-scrim,
-  .xnav-panel {
-    display: none;
-  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   .xsearch-backdrop {
     padding-top: 85px;
   }
@@ -2333,31 +2017,13 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 @media (max-width: 430px) {
-  .xnav-inner {
-    width: calc(100% - 32px);
-    gap: 12px;
-  }
-  .xnav-brand {
-    font-size: 20px;
-    gap: 7px;
-  }
-  .xnav-actions {
-    gap: 5px;
-  }
-  .xnav-cta {
-    font-size: 10px;
-    padding: 8px 10px;
-  }
-  .xnav-icon {
-    width: 27px;
-  }
-  .xnav-mobile-main {
-    grid-template-columns: 1fr;
-  }
-  .xnav-mobile-main > a {
-    font-size: 18px;
-    padding: 16px 0;
-  }
+  
+  
+  
+  
+  
+  
+  
   .page-hero h1 {
     font-size: 47px;
     letter-spacing: -0.05em;
@@ -2627,9 +2293,8 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .xnav-panel,
   .xsearch-dialog,
-  .console-orb > i {
+.console-orb > i {
     animation: none;
   }
   .page-card-index > svg {
@@ -2637,7 +2302,3 @@ a.page-card:hover .page-card-index > svg {
   }
 }
 
-.xnav-group-label[data-active="true"] {
-  color: #eff2ef;
-  box-shadow: 0 1px #d7b792;
-}

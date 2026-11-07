@@ -66,6 +66,3 @@ export const siteLinks = [
 export const productLinks = siteLinks.filter((x) =>
   ["/desktop", "/automations", "/build", "/auraos"].includes(x.href),
 );
-export const resourceLinks = siteLinks.filter((x) =>
-  ["/docs", "/roadmap", "/resources"].includes(x.href),
-);
