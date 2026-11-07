@@ -72,6 +72,10 @@ const voice = new VoiceService({
     notify("voice:wake");
     showWindow();
   },
+  onProblem: (text) => {
+    if (Notification.isSupported())
+      new Notification({ title: "DRER voice", body: text }).show();
+  },
   onCommand: async (question) => {
     notify("voice:heard", { question });
     const result = await runRequest({ question, withScreen: false });
@@ -79,12 +83,36 @@ const voice = new VoiceService({
     return result;
   },
 });
+let launchAtLogin = true;
+async function patchConfig(patch) {
+  let existing = {};
+  try {
+    existing = JSON.parse(await fs.readFile(configFile(), "utf8"));
+  } catch {}
+  await fs.writeFile(configFile(), JSON.stringify({ ...existing, ...patch }), {
+    mode: 0o600,
+  });
+}
+// Start DRER (hidden, in the tray) when the user logs in so the wake name works
+// after a reboot. Only for packaged builds: a dev run must not register itself.
+function applyLaunchAtLogin() {
+  if (!app.isPackaged) return;
+  app.setLoginItemSettings({
+    openAtLogin: launchAtLogin,
+    openAsHidden: true,
+    args: ["--background"],
+  });
+}
+const startedHidden = () =>
+  process.argv.includes("--background") ||
+  (process.platform === "darwin" && app.getLoginItemSettings().wasOpenedAtLogin);
 async function loadConfig() {
   await fs.mkdir(app.getPath("userData"), { recursive: true, mode: 0o700 });
   try {
     const cfg = JSON.parse(await fs.readFile(configFile(), "utf8"));
     if (cfg.voice) await voice.configure(cfg.voice);
     savedVoiceEnabled = cfg.voiceEnabled === true;
+    if (typeof cfg.launchAtLogin === "boolean") launchAtLogin = cfg.launchAtLogin;
     encryptedKey =
       typeof cfg.encryptedKey === "string" ? cfg.encryptedKey : null;
     if (typeof cfg.model === "string" && cfg.model.length < 120)
@@ -579,11 +607,23 @@ function createTray() {
   image.setTemplateImage(process.platform === "darwin");
   tray = new Tray(image);
   tray.setToolTip("DRER");
-  tray.setContextMenu(
+  const menu = () =>
     Menu.buildFromTemplate([
       { label: "Open DRER", click: () => showWindow() },
       { label: "Settings", click: () => showWindow(true) },
       { type: "separator" },
+      {
+        label: "Launch at login",
+        type: "checkbox",
+        checked: launchAtLogin,
+        enabled: app.isPackaged,
+        click: async (item) => {
+          launchAtLogin = item.checked;
+          applyLaunchAtLogin();
+          await patchConfig({ launchAtLogin });
+          tray.setContextMenu(menu());
+        },
+      },
       {
         label: "Quit DRER",
         click: () => {
@@ -591,8 +631,8 @@ function createTray() {
           app.quit();
         },
       },
-    ]),
-  );
+    ]);
+  tray.setContextMenu(menu());
 }
 
 if (!app.requestSingleInstanceLock()) {
@@ -646,8 +686,15 @@ if (!app.requestSingleInstanceLock()) {
       } catch {}
       configurationReady = loadConfig().then(() => {
         notify("config:ready");
-        if (savedVoiceEnabled || process.argv.includes("--voice"))
+        applyLaunchAtLogin();
+        if (savedVoiceEnabled || process.argv.includes("--voice")) {
           voice.start();
+          // Preload an already-downloaded model so the first command is fast.
+          if ((process.env.DRER_AI || "auto").toLowerCase() !== "groq")
+            require("./local-ai")
+              .warmLocal()
+              .catch((e) => console.warn("DRER warm-up skipped:", e.message));
+        }
       });
       await createWindow();
       await createTray();
@@ -661,7 +708,7 @@ if (!app.requestSingleInstanceLock()) {
         500,
       );
       timer.unref();
-      if (!process.argv.includes("--background-test"))
+      if (!process.argv.includes("--background-test") && !startedHidden())
         await showWindow(process.argv.includes("--settings"));
       console.log("DRER ready. Shortcut: " + (shortcut || "use the tray menu"));
     })

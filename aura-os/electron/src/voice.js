@@ -78,12 +78,16 @@ class VoiceService {
     onWake,
     onMeter = () => {},
     onTranscript = () => {},
+    onProblem = () => {},
   }) {
     this.onState = onState;
     this.onMeter = onMeter;
     this.onTranscript = onTranscript;
     this.onCommand = onCommand;
     this.onWake = onWake;
+    this.onProblem = onProblem;
+    this.restartTimer = null;
+    this.restarts = [];
     this.options = voiceSettings();
     this.router = new WakeRouter();
     this.enabled = false;
@@ -133,6 +137,8 @@ class VoiceService {
   }
   stopListener() {
     this.generation++;
+    clearTimeout(this.restartTimer);
+    this.restartTimer = null;
     if (this.child) {
       this.child.kill("SIGTERM");
       this.child = null;
@@ -214,9 +220,29 @@ class VoiceService {
     child.on("exit", () => {
       if (token !== this.generation) return;
       this.child = null;
+      this.scheduleRestart();
+    });
+  }
+  // The listener helper can die while the window is hidden (crash, sleep/wake,
+  // speech-recognition limits). Restart it with backoff instead of going deaf.
+  scheduleRestart() {
+    if (!this.enabled) return;
+    const now = Date.now();
+    this.restarts = this.restarts.filter((t) => now - t < 60000);
+    if (this.restarts.length >= 5) {
       this.enabled = false;
       this.status("Voice stopped. Enable it again to retry.");
-    });
+      this.onProblem("DRER stopped listening. Open DRER and turn voice on again.");
+      return;
+    }
+    const delay = Math.min(15000, 1000 * 2 ** this.restarts.length);
+    this.restarts.push(now);
+    this.status("Listener stopped. Restarting…");
+    this.acknowledged = false;
+    this.restartTimer = setTimeout(() => {
+      this.restartTimer = null;
+      this.listen();
+    }, delay);
   }
   async speak(text) {
     if (process.platform !== "darwin")

@@ -129,3 +129,30 @@ test("saved pronunciation aliases recognize the actual observed Tester transcrip
   assert.deepEqual(router.accept("Test, open Mail"), { command: "open Mail" });
   assert.equal(router.accept("Testament"), null);
 });
+
+test("listener restarts with backoff, then gives up and reports it", async (t) => {
+  const { VoiceService } = require("../src/voice");
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const problems = [];
+  const v = new VoiceService({
+    onState: () => {},
+    onCommand: async () => {},
+    onWake: () => {},
+    onProblem: (m) => problems.push(m),
+  });
+  let starts = 0;
+  v.listen = () => starts++;
+  v.enabled = true;
+  for (let i = 0; i < 5; i++) {
+    v.scheduleRestart();
+    t.mock.timers.tick(20000);
+  }
+  assert.equal(starts, 5);
+  v.scheduleRestart(); // sixth failure inside a minute
+  assert.equal(v.enabled, false);
+  assert.equal(problems.length, 1);
+  v.enabled = false;
+  v.scheduleRestart(); // deliberate stop never restarts
+  t.mock.timers.tick(20000);
+  assert.equal(starts, 5);
+});

@@ -1,6 +1,7 @@
 // On-device inference through @zeroth-ai/sdk-node (llama.cpp). After the first
 // model download nothing here touches the network. The SDK is ESM, so it is
 // loaded with a dynamic import() from this CommonJS main process.
+const path = require("node:path");
 let enginePromise = null;
 let loadedModel = "";
 
@@ -41,10 +42,14 @@ function buildTools(tools, record) {
   return map;
 }
 
-function loadEngine({ onProgress } = {}) {
+function loadEngine({ onProgress, model } = {}) {
   if (!enginePromise) {
     enginePromise = import("@zeroth-ai/sdk-node")
-      .then(({ zeroth }) => zeroth.load({ ...modelChoice(), onProgress }))
+      .then(({ zeroth }) => zeroth.load({
+          ...modelChoice(),
+          ...(model ? { model } : {}),
+          onProgress,
+        }))
       .then((ai) => {
         loadedModel = ai.model?.id || ai.model?.name || "local";
         return ai;
@@ -94,10 +99,31 @@ async function queryLocal({
   return { text, model: loadedModel, tokens: 0 };
 }
 
+// Load a model that is ALREADY on disk so the first spoken command is fast.
+// Never downloads: returns false when nothing usable is cached.
+async function warmLocal() {
+  if (enginePromise) return true;
+  const sdk = await import("@zeroth-ai/sdk-node");
+  const dir = path.join(sdk.defaultCacheDir(), "models");
+  const want = (process.env.DRER_LOCAL_MODEL || "auto").trim();
+  const cached = [];
+  for (const e of sdk.catalog) {
+    if (e.kind !== "chat" || (want !== "auto" && e.id !== want)) continue;
+    if (await sdk.isDownloaded(path.join(dir, e.file), e.sizeBytes))
+      cached.push(e);
+  }
+  if (!cached.length) return false;
+  // Prefer the largest cached model in the fast tier (3B or smaller).
+  cached.sort((a, b) => b.paramsB - a.paramsB);
+  const pick = cached.find((e) => e.paramsB <= 3.5) || cached[cached.length - 1];
+  await loadEngine({ model: pick.id });
+  return true;
+}
+
 async function unloadLocal() {
   const p = enginePromise;
   enginePromise = null;
   if (p) await (await p.catch(() => null))?.unload();
 }
 
-module.exports = { queryLocal, unloadLocal, buildTools, simplify };
+module.exports = { queryLocal, unloadLocal, warmLocal, buildTools, simplify };
