@@ -1,7 +1,7 @@
 {
   "name": "drer-desktop",
   "version": "0.2.0",
-  "description": "DRER \u2014 cross-platform desktop assistant",
+  "description": "DRER — cross-platform desktop assistant",
   "author": "Precious Adedokun <hello@preciousadedokun.com.ng>",
   "homepage": "https://auraos.com",
   "main": "src/main.js",
@@ -17,7 +17,9 @@
     "prestart": "node scripts/build-native.cjs",
     "pack:mac": "npm run build:native && electron-builder --mac --dir --arm64 --config.electronDist=node_modules/electron/dist"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@zeroth-ai/sdk-node": "^0.1.0"
+  },
   "devDependencies": {
     "electron": "45.2.3",
     "electron-builder": "24.13.3",
@@ -60,7 +62,9 @@
     ],
     "asarUnpack": [
       "native/build/**/*",
-      "native/*.applescript"
+      "native/*.applescript",
+      "node_modules/@node-llama-cpp/**/*",
+      "node_modules/node-llama-cpp/**/*"
     ]
   },
   "productName": "DRER"

@@ -372,9 +372,9 @@ async function runRequest(payload) {
       );
       key = decrypted.result;
     }
-    if (!key)
+    if (!key && withScreen)
       throw new Error(
-        "That request needs the AI connection. Add a key in Settings, or try “set a timer for 10s”, “open calculator”, or “save a note called Ideas: my idea”.",
+        "Screen analysis needs a Groq key. Add one in Settings. Everything else works on-device.",
       );
     const image = withScreen ? await captureScreen() : null;
     if (controller.signal.aborted) throw new Error("Request cancelled.");
@@ -384,6 +384,7 @@ async function runRequest(payload) {
       question,
       image,
       signal: controller.signal,
+      onProgress: (f) => notify("ai:progress", { fraction: f }),
     });
     if (result.action) {
       if (controller.signal.aborted) throw new Error("Request cancelled.");
