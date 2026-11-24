@@ -1,79 +1,189 @@
 const $ = (id) => document.getElementById(id);
+const qa = (sel) => [...document.querySelectorAll(sel)];
 let state = {},
-  busy = false;
-function setView(name) {
-  $("chat-view").hidden = name !== "chat";
-  $("settings-view").hidden = name !== "settings";
-  $("nav-chat").classList.toggle("active", name === "chat");
-  $("nav-settings").classList.toggle("active", name === "settings");
-  $("page-title").textContent =
-    name === "chat" ? "A little less by hand." : "Settings";
-  if (name === "settings") {
-    refresh();
-    loadVoiceSettings().catch(
-      (error) => ($("voice-settings-status").textContent = error.message),
-    );
+  busy = false,
+  voiceEnabled = false,
+  voiceLoaded = false,
+  view = "chat";
+
+/* ---------- storage (per-viewer conveniences; the app works without it) ---------- */
+const store = {
+  get(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v == null ? fallback : JSON.parse(v);
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch {}
+  },
+};
+
+/* ---------- chats ---------- */
+let chats = store.get("drer.chats", []);
+let current = null;
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function saveChats() {
+  chats = chats.slice(0, 50);
+  store.set("drer.chats", chats);
+}
+function ensureChat() {
+  if (current) return current;
+  current = { id: newId(), title: "New chat", messages: [], at: Date.now() };
+  chats.unshift(current);
+  return current;
+}
+function renderChatList() {
+  const list = $("chat-list");
+  list.replaceChildren();
+  const items = chats.filter((c) => c.messages.length);
+  if (!items.length) {
+    const p = document.createElement("p");
+    p.className = "chat-empty";
+    p.textContent = "Your conversations will appear here.";
+    list.append(p);
+    return;
+  }
+  for (const chat of items) {
+    const row = document.createElement("div");
+    row.className = "side-item chat-item" + (chat === current ? " active" : "");
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    const title = document.createElement("span");
+    title.textContent = chat.title;
+    const del = document.createElement("button");
+    del.className = "del";
+    del.textContent = "×";
+    del.setAttribute("aria-label", "Delete chat");
+    del.addEventListener("click", (e) => {
+      e.stopPropagation();
+      chats = chats.filter((c) => c !== chat);
+      if (current === chat) startNewChat();
+      saveChats();
+      renderChatList();
+    });
+    const open = () => openChat(chat);
+    row.addEventListener("click", open);
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") open();
+    });
+    row.append(title, del);
+    list.append(row);
   }
 }
-function message(role, text, kind = "") {
+function openChat(chat) {
+  current = chat;
+  $("messages").replaceChildren();
+  for (const m of chat.messages) message(m.role, m.text, m.kind, false);
+  syncEmpty();
+  setView("chat");
+  renderChatList();
+}
+function startNewChat() {
+  current = null;
+  $("messages").replaceChildren();
+  syncEmpty();
+  renderChatList();
+  setView("chat");
+  $("question").focus();
+}
+function syncEmpty() {
+  $("chat-scroll").classList.toggle("has-messages", $("messages").children.length > 0);
+}
+
+/* ---------- views ---------- */
+function setView(name) {
+  view = name;
+  const settings = name === "settings";
+  $("app").classList.toggle("settings-open", settings);
+  $("settings").hidden = !settings;
+  for (const id of ["chat", "tasks", "voice"]) $("view-" + id).hidden = id !== name;
+  qa(".rail-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+  if (settings) {
+    refresh();
+    loadVoiceSettings().catch((e) => ($("voice-settings-status").textContent = e.message));
+  }
+}
+function showSection(name) {
+  qa(".pane").forEach((p) => (p.hidden = p.id !== "pane-" + name));
+  qa("[data-section]").forEach((b) => b.classList.toggle("active", b.dataset.section === name));
+}
+const sectionWords = {
+  general: "general app launch login shortcut workspace",
+  ai: "ai models provider on-device groq key vision model local",
+  voice: "voice wake name speech reply speak microphone",
+  permissions: "permissions screen recording capture privacy",
+  about: "about version help build",
+};
+$("settings-search").addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  let first = null;
+  qa("[data-section]").forEach((b) => {
+    const hit = !q || (b.textContent + " " + sectionWords[b.dataset.section]).toLowerCase().includes(q);
+    b.hidden = !hit;
+    if (hit && !first) first = b.dataset.section;
+  });
+  if (first && q) showSection(first);
+});
+
+/* ---------- messages ---------- */
+function message(role, text, kind = "", persist = true) {
   const article = document.createElement("article");
   article.className = "message " + role + " " + kind;
   const label = document.createElement("span");
   label.className = "message-label";
-  label.textContent =
-    role === "user"
-      ? "YOU"
-      : role === "reminder"
-        ? "REMINDER DELIVERED"
-        : "DRER";
+  label.textContent = role === "reminder" ? "Reminder delivered" : role === "test" ? "Recorded system test" : "DRER";
   const content = document.createElement("p");
   content.textContent = text;
   article.append(label, content);
   $("messages").append(article);
+  syncEmpty();
   article.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  if (persist && role !== "test") {
+    const chat = ensureChat();
+    chat.messages.push({ role, text: String(text).slice(0, 4000), kind });
+    chat.messages = chat.messages.slice(-200);
+    if (chat.title === "New chat" && role === "user")
+      chat.title = String(text).replace(/\s+/g, " ").trim().slice(0, 48) || "New chat";
+    chat.at = Date.now();
+    saveChats();
+    renderChatList();
+  }
   return article;
 }
+
+/* ---------- reminders ---------- */
 function updateCountdowns() {
   document.querySelectorAll("[data-due]").forEach((node) => {
-    const seconds = Math.max(
-      0,
-      Math.ceil((new Date(node.dataset.due).getTime() - Date.now()) / 1000),
-    );
+    const seconds = Math.max(0, Math.ceil((new Date(node.dataset.due).getTime() - Date.now()) / 1000));
     const h = Math.floor(seconds / 3600),
       m = Math.floor((seconds % 3600) / 60),
       s = seconds % 60;
-    node.textContent =
-      (h ? h + ":" : "") +
-      String(m).padStart(2, "0") +
-      ":" +
-      String(s).padStart(2, "0");
+    node.textContent = (h ? h + ":" : "") + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   });
 }
 function showReminders(items = []) {
-  $("reminders").replaceChildren();
+  const box = $("reminders");
+  box.replaceChildren();
   if (!items.length) {
     const p = document.createElement("p");
-    p.textContent = "No active timers. Try “set a timer for 10s”.";
-    $("reminders").append(p);
+    p.textContent = "No reminders yet. Try “set a timer for 10 seconds”.";
+    box.append(p);
   }
-  for (const item of items.slice(-8).reverse()) {
+  for (const item of items.slice(-20).reverse()) {
     const row = document.createElement("div");
     row.className = "reminder-row " + item.status;
     const name = document.createElement("span");
-    name.textContent =
-      (item.status === "delivered"
-        ? "✓ "
-        : item.status === "cancelled"
-          ? "− "
-          : "◷ ") + item.title;
+    name.textContent = (item.status === "delivered" ? "✓ " : item.status === "cancelled" ? "– " : "") + item.title;
     const detail = document.createElement("div");
     detail.className = "reminder-detail";
     const time = document.createElement("small");
     time.textContent =
-      new Date(item.dueAt).toLocaleTimeString() +
-      " · " +
-      (item.native ? "Apple Reminders · " : "") +
-      item.status;
+      new Date(item.dueAt).toLocaleTimeString() + " · " + (item.native ? "Apple Reminders · " : "") + item.status;
     detail.append(time);
     if (item.status === "scheduled") {
       const count = document.createElement("strong");
@@ -85,8 +195,7 @@ function showReminders(items = []) {
       cancel.setAttribute("aria-label", "Cancel " + item.title);
       cancel.addEventListener("click", async () => {
         try {
-          const next = await window.drer.cancelReminder(item.id);
-          showReminders(next.reminders);
+          showReminders((await window.drer.cancelReminder(item.id)).reminders);
         } catch (e) {
           message("assistant", e.message, "error");
         }
@@ -94,52 +203,61 @@ function showReminders(items = []) {
       detail.append(cancel);
     }
     row.append(name, detail);
-    $("reminders").append(row);
+    box.append(row);
   }
   updateCountdowns();
 }
 setInterval(updateCountdowns, 250);
-$("dismiss-alarm").addEventListener("click", () => {
-  $("alarm-banner").hidden = true;
-});
+$("dismiss-alarm").addEventListener("click", () => ($("alarm-banner").hidden = true));
+
+/* ---------- state ---------- */
+const modeLabel = { auto: "On-device", local: "On-device only", groq: "Groq" };
+function setSwitch(el, on) {
+  el.setAttribute("aria-checked", on ? "true" : "false");
+}
 async function refresh() {
   state = await window.drer.state();
-  $("platform-name").textContent =
-    { darwin: "macOS", win32: "Windows", linux: "Linux" }[state.platform] ||
-    state.platform;
-  $("shortcut").textContent =
-    state.platform === "darwin" &&
-    state.shortcut === "CommandOrControl+Shift+Space"
-      ? "⌘ + ⇧ + Space"
-      : state.shortcut || "Open from the tray";
-  $("connection-status").textContent = state.hasKey
-    ? "Local tools + live Groq connected."
-    : "Local tools ready. Add a key for AI.";
+  $("platform-name").textContent = { darwin: "macOS", win32: "Windows", linux: "Linux" }[state.platform] || state.platform;
+  const shortcut =
+    state.platform === "darwin" && state.shortcut === "CommandOrControl+Shift+Space"
+      ? "⌘ ⇧ Space"
+      : state.shortcut || "Open from the menu bar";
+  $("shortcut").textContent = shortcut;
+  $("shortcut-2").textContent = shortcut;
+  const mode = state.aiMode || "auto";
+  $("connection-status").textContent =
+    mode === "groq" ? (state.hasKey ? "Groq connected" : "Add a Groq key") : state.hasKey ? "On-device + Groq" : "On-device AI";
+  $("status-dot").classList.toggle("warn", mode === "groq" && !state.hasKey);
+  $("mode-chip").textContent = modeLabel[mode] || "On-device";
   $("key-state").textContent = state.hasKey
     ? "A key is configured. Leave the field empty to keep it."
-    : "No key configured. Paste a key below to enable live AI.";
-  $("model").value = state.model;
-  $("screen-status").textContent =
-    "Permission status: " + state.screenPermission;
+    : "No key configured. Needed for screen analysis.";
+  $("model").value = state.model || "";
+  $("screen-status").textContent = "Permission status: " + state.screenPermission;
+  $("workspace-path").textContent = state.workspace || "—";
+  $("app-version").textContent = state.version || "—";
+  setSwitch($("set-login"), state.launchAtLogin !== false);
+  $("set-login").disabled = !state.canLaunchAtLogin;
+  $("set-login").title = state.canLaunchAtLogin ? "" : "Available in the packaged app";
+  qa("#ai-mode button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === mode)));
+  $("local-model").value = state.localModel || "auto";
   showReminders(state.reminders);
 }
 function setBusy(value) {
   busy = value;
   $("send").disabled = value;
   $("cancel-request").hidden = !value;
-  $("request-status").textContent = value
-    ? "Working on your request…"
-    : "Ready · Local actions do not need an API key.";
+  $("request-status").textContent = value ? "Working…" : "Ready";
 }
+
+/* ---------- results ---------- */
 function openResultButton(article, result) {
   if (result.application) {
     const open = document.createElement("button");
     open.className = "action-button";
     open.textContent = "Open " + result.service;
     open.addEventListener("click", () =>
-      window.drer
-        .openNative(result.application)
-        .catch((e) => message("assistant", e.message, "error")),
+      window.drer.openNative(result.application).catch((e) => message("assistant", e.message, "error")),
     );
     article.append(open);
   }
@@ -170,6 +288,7 @@ function renderResult(result) {
     confirm.className = "action-button";
     confirm.textContent = "Confirm action";
     const cancel = document.createElement("button");
+    cancel.className = "pill";
     cancel.textContent = "Cancel";
     buttons.append(confirm, cancel);
     article.append(buttons);
@@ -195,11 +314,7 @@ function renderResult(result) {
     });
     return;
   }
-  const article = message(
-    "assistant",
-    result.text,
-    result.type === "error" ? "error" : "success",
-  );
+  const article = message("assistant", result.text, result.type === "error" ? "error" : "success");
   if (result.screenshot) {
     const image = document.createElement("img");
     image.src = result.screenshot;
@@ -209,100 +324,166 @@ function renderResult(result) {
   }
   if (result.model) {
     const meta = document.createElement("small");
-    meta.textContent = `${result.route === "ai-tool" ? "Executed through an AI tool" : "Live Groq response"} · ${result.model} · ${result.tokens} tokens`;
+    const how = result.route === "ai-tool" ? "Action via AI tool" : result.local ? "On-device response" : "Groq response";
+    meta.textContent = [how, result.model, result.tokens ? result.tokens + " tokens" : ""].filter(Boolean).join(" · ");
     article.append(meta);
   }
   if (result.reminders) showReminders(result.reminders);
   openResultButton(article, result);
+  hideProgress();
 }
+
+/* ---------- composer ---------- */
+function setScreen(on) {
+  $("with-screen").checked = on;
+  $("screen-chip").setAttribute("aria-pressed", String(on));
+  $("screen-chip-text").textContent = on ? "Screen shared" : "This computer";
+  document.querySelector(".screen-toggle").hidden = !on;
+}
+setScreen(false);
+$("screen-chip").addEventListener("click", () => setScreen(!$("with-screen").checked));
+$("with-screen").addEventListener("change", (e) => setScreen(e.target.checked));
+function autoGrow() {
+  const t = $("question");
+  t.style.height = "auto";
+  t.style.height = Math.min(180, t.scrollHeight) + "px";
+}
+$("question").addEventListener("input", autoGrow);
 $("request-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (busy) return;
   const question = $("question").value.trim();
   if (!question) return;
   const withScreen = $("with-screen").checked;
-  message(
-    "user",
-    question + (withScreen ? "\n[Primary screen shared with Groq]" : ""),
-  );
+  message("user", question + (withScreen ? "\n[Primary screen shared with Groq]" : ""));
   $("question").value = "";
+  autoGrow();
   setBusy(true);
   try {
     renderResult(await window.drer.request({ question, withScreen }));
-  } catch (e) {
-    message("assistant", e.message, "error");
+  } catch (err) {
+    message("assistant", err.message, "error");
   } finally {
     setBusy(false);
   }
 });
 $("question").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
     e.preventDefault();
     $("request-form").requestSubmit();
   }
 });
-$("cancel-request").addEventListener("click", () =>
-  window.drer.cancelRequest(),
-);
-document.querySelectorAll("[data-request]").forEach((button) =>
+$("cancel-request").addEventListener("click", () => window.drer.cancelRequest());
+qa("[data-request]").forEach((button) =>
   button.addEventListener("click", () => {
     $("question").value = button.dataset.request;
+    autoGrow();
     $("question").focus();
   }),
 );
-$("nav-chat").addEventListener("click", () => setView("chat"));
-$("nav-settings").addEventListener("click", () => setView("settings"));
-$("hide").addEventListener("click", () => window.drer.hide());
-$("get-key").addEventListener("click", () =>
-  window.drer.openLink("https://console.groq.com/keys"),
-);
-$("screen-settings").addEventListener("click", () => window.drer.permissions());
-$("settings-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  $("save-settings").disabled = true;
-  try {
-    await window.drer.saveConfig({
-      key: $("api-key").value,
-      model: $("model").value,
-    });
-    $("api-key").value = "";
-    $("settings-status").textContent =
-      "Settings saved. Your key is not shown or sent to the renderer.";
-    await refresh();
-  } catch (e) {
-    $("settings-status").textContent = e.message;
-  } finally {
-    $("save-settings").disabled = false;
-  }
+
+/* ---------- model download progress ---------- */
+let hideTimer = null;
+function hideProgress() {
+  clearTimeout(hideTimer);
+  $("progress-banner").hidden = true;
+}
+window.drer.on("ai:progress", ({ fraction }) => {
+  const f = Math.max(0, Math.min(1, Number(fraction) || 0));
+  $("progress-banner").hidden = false;
+  $("model-progress").value = f;
+  $("progress-text").textContent =
+    f >= 1 ? "Model ready." : "Downloading the model once (" + Math.round(f * 100) + "%). After this, nothing leaves your computer.";
+  clearTimeout(hideTimer);
+  if (f >= 1) hideTimer = setTimeout(hideProgress, 1500);
 });
+
+/* ---------- navigation ---------- */
+qa(".rail-btn").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+qa("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
+$("new-chat").addEventListener("click", startNewChat);
 window.drer.on("nav:settings", () => setView("settings"));
 window.drer.on("app:state", (data) => showReminders(data.reminders));
 window.drer.on("agent:busy", (data) => setBusy(data.busy));
 window.drer.on("reminder:due", async (item) => {
   $("alarm-title").textContent = item.title;
   $("alarm-banner").hidden = false;
-  message(
-    "reminder",
-    item.title +
-      "\nDelivered at " +
-      new Date(item.deliveredAt).toLocaleTimeString(),
-    "success",
-  );
+  message("reminder", item.title + "\nDelivered at " + new Date(item.deliveredAt).toLocaleTimeString(), "success");
   await refresh();
 });
 window.drer.on("app:error", (item) => message("assistant", item.text, "error"));
-refresh().catch((e) => message("assistant", e.message, "error"));
-
 window.drer.on("test:result", (data) => {
-  const item = message("test", data.question);
-  item.querySelector(".message-label").textContent = "RECORDED SYSTEM TEST";
+  message("test", data.question, "", false);
   renderResult(data.result);
 });
-
 window.drer.on("config:ready", () => refresh());
 
-let voiceEnabled = false,
-  voiceLoaded = false;
+/* ---------- settings: save handlers ---------- */
+async function save(patch, statusEl) {
+  try {
+    await window.drer.saveConfig(patch);
+    await refresh();
+    return true;
+  } catch (e) {
+    if (statusEl) statusEl.textContent = e.message;
+    return false;
+  }
+}
+$("set-login").addEventListener("click", () =>
+  save({ launchAtLogin: $("set-login").getAttribute("aria-checked") !== "true" }),
+);
+qa("#ai-mode button").forEach((b) => b.addEventListener("click", () => save({ aiMode: b.dataset.mode })));
+$("local-model").addEventListener("change", (e) => save({ localModel: e.target.value }));
+$("get-key").addEventListener("click", () => window.drer.openLink("https://console.groq.com/keys"));
+$("screen-settings").addEventListener("click", () => window.drer.permissions());
+$("settings-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("save-settings").disabled = true;
+  const status = $("settings-status");
+  status.textContent = "";
+  const ok = await save({ key: $("api-key").value, model: $("model").value }, status);
+  if (ok) {
+    $("api-key").value = "";
+    status.textContent = "Saved. Your key is encrypted and never sent to this window.";
+  }
+  $("save-settings").disabled = false;
+});
+
+/* ---------- voice ---------- */
+function paintVoice(enabled, text) {
+  voiceEnabled = enabled;
+  $("voice-toggle").textContent = enabled ? "Turn voice off" : "Enable voice";
+  $("voice-headline").textContent = enabled ? "Listening" : "Voice is off";
+  $("orb").classList.toggle("live", enabled);
+  $("composer-mic").classList.toggle("on", enabled);
+  if (text) $("voice-status").textContent = text;
+  if (enabled) $("voice-tip").hidden = true;
+}
+async function toggleVoice() {
+  try {
+    const result = await window.drer.toggleVoice(!voiceEnabled);
+    paintVoice(result.enabled);
+  } catch (error) {
+    $("voice-status").textContent = error.message;
+    setView("voice");
+  }
+}
+$("voice-toggle").addEventListener("click", toggleVoice);
+$("composer-mic").addEventListener("click", toggleVoice);
+$("tip-enable-voice").addEventListener("click", toggleVoice);
+$("tip-dismiss").addEventListener("click", () => {
+  $("voice-tip").hidden = true;
+  store.set("drer.tipDismissed", true);
+});
+window.drer.on("voice:state", (data) => paintVoice(data.enabled, data.text));
+window.drer.on("voice:heard", (data) => message("user", data.question + " [voice]"));
+window.drer.on("voice:result", renderResult);
+window.drer.on("voice:wake", () => {
+  $("voice-status").textContent = "Hmm? Listening for your request…";
+});
+window.drer.on("voice:meter", (data) => ($("mic-level").value = data.level));
+window.drer.on("voice:transcript", (data) => ($("heard-speech").textContent = "Heard: " + data.text));
+
 async function loadVoiceSettings() {
   const cfg = await window.drer.state();
   const options = cfg.voice || {};
@@ -310,22 +491,27 @@ async function loadVoiceSettings() {
   $("preferred-name").value = options.preferredName || "";
   $("wake-aliases").value = (options.wakeAliases || []).join(", ");
   $("spoken-replies").checked = options.spokenReplies !== false;
+  setSwitch($("spoken-replies-switch"), $("spoken-replies").checked);
   if (!voiceLoaded) {
-    for (const item of await window.drer.voices()) {
-      const option = document.createElement("option");
-      option.value = item.name;
-      option.textContent = item.name + " · " + item.language;
-      $("spoken-voice").append(option);
-    }
     voiceLoaded = true;
+    try {
+      for (const item of await window.drer.voices()) {
+        const option = document.createElement("option");
+        option.value = item.name;
+        option.textContent = item.name + " · " + item.language;
+        $("spoken-voice").append(option);
+      }
+    } catch {
+      voiceLoaded = false;
+    }
   }
   $("spoken-voice").value = options.voice || "";
 }
-$("nav-settings").addEventListener("click", () =>
-  loadVoiceSettings().catch(
-    (e) => ($("voice-settings-status").textContent = e.message),
-  ),
-);
+$("spoken-replies-switch").addEventListener("click", () => {
+  const on = $("spoken-replies-switch").getAttribute("aria-checked") !== "true";
+  $("spoken-replies").checked = on;
+  setSwitch($("spoken-replies-switch"), on);
+});
 $("voice-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   try {
@@ -348,35 +534,18 @@ $("voice-preview").addEventListener("click", async () => {
     $("voice-settings-status").textContent = error.message;
   }
 });
-$("voice-toggle").addEventListener("click", async () => {
-  try {
-    const result = await window.drer.toggleVoice(!voiceEnabled);
-    voiceEnabled = result.enabled;
-    $("voice-toggle").textContent = voiceEnabled
-      ? "Turn voice off"
-      : "Enable voice";
-  } catch (error) {
-    $("voice-status").textContent = error.message;
-  }
-});
-window.drer.on("voice:state", (data) => {
-  voiceEnabled = data.enabled;
-  $("voice-toggle").textContent = data.enabled
-    ? "Turn voice off"
-    : "Enable voice";
-  $("voice-status").textContent = data.text;
-});
-window.drer.on("voice:heard", (data) =>
-  message("user", data.question + " [voice]"),
-);
-window.drer.on("voice:result", renderResult);
-window.drer.on("voice:wake", () => {
-  $("voice-status").textContent = "Hmm? Listening for your request…";
-});
 
-window.drer.on("voice:meter", (data) => {
-  $("mic-level").value = data.level;
-});
-window.drer.on("voice:transcript", (data) => {
-  $("heard-speech").textContent = "Heard: " + data.text;
-});
+/* ---------- boot ---------- */
+(async function boot() {
+  const started = performance.now();
+  renderChatList();
+  try {
+    await refresh();
+    $("voice-tip").hidden = Boolean(store.get("drer.tipDismissed", false)) || voiceEnabled;
+  } catch (e) {
+    message("assistant", e.message, "error", false);
+  }
+  // Keep the loading state up long enough to read as intentional, not a flash.
+  const wait = Math.max(0, 900 - (performance.now() - started));
+  setTimeout(() => $("splash").classList.add("done"), wait);
+})();

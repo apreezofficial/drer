@@ -83,6 +83,8 @@ const voice = new VoiceService({
     return result;
   },
 });
+const AI_MODES = ["auto", "local", "groq"];
+const LOCAL_MODELS = ["auto", "nano-1b", "lite-3b", "core-8b"];
 let launchAtLogin = true;
 async function patchConfig(patch) {
   let existing = {};
@@ -113,6 +115,10 @@ async function loadConfig() {
     if (cfg.voice) await voice.configure(cfg.voice);
     savedVoiceEnabled = cfg.voiceEnabled === true;
     if (typeof cfg.launchAtLogin === "boolean") launchAtLogin = cfg.launchAtLogin;
+    if (!process.env.DRER_AI && AI_MODES.includes(cfg.aiMode))
+      process.env.DRER_AI = cfg.aiMode;
+    if (!process.env.DRER_LOCAL_MODEL && LOCAL_MODELS.includes(cfg.localModel))
+      process.env.DRER_LOCAL_MODEL = cfg.localModel;
     encryptedKey =
       typeof cfg.encryptedKey === "string" ? cfg.encryptedKey : null;
     if (typeof cfg.model === "string" && cfg.model.length < 120)
@@ -129,13 +135,24 @@ async function createWindow() {
   const display = screen.getPrimaryDisplay().workArea;
   window = new BrowserWindow({
     title: "DRER",
-    width: 1000,
+    width: 1120,
     height: 760,
-    minWidth: 760,
-    minHeight: 580,
-    x: Math.max(display.x, display.x + Math.round((display.width - 1000) / 2)),
+    minWidth: 900,
+    minHeight: 600,
+    x: Math.max(display.x, display.x + Math.round((display.width - 1120) / 2)),
     y: Math.max(display.y, display.y + Math.round((display.height - 760) / 2)),
-    backgroundColor: "#141719",
+    backgroundColor: "#101214",
+    titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "hidden",
+    trafficLightPosition: { x: 18, y: 16 },
+    ...(process.platform === "darwin"
+      ? {}
+      : {
+          titleBarOverlay: {
+            color: "#101214",
+            symbolColor: "#b6b9be",
+            height: 44,
+          },
+        }),
     show: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
@@ -172,6 +189,10 @@ function config() {
     hasKey: Boolean(key || encryptedKey),
     voice: voice.options,
     model,
+    launchAtLogin,
+    canLaunchAtLogin: app.isPackaged,
+    aiMode: (process.env.DRER_AI || "auto").toLowerCase(),
+    localModel: process.env.DRER_LOCAL_MODEL || "auto",
     platform: process.platform,
     shortcut,
     screenPermission:
@@ -467,6 +488,24 @@ handle("agent:cancel-request", () => {
   return { ok: true };
 });
 handle("config:save", async (cfg) => {
+  const prefs = {};
+  if (typeof cfg?.launchAtLogin === "boolean") {
+    launchAtLogin = cfg.launchAtLogin;
+    applyLaunchAtLogin();
+    prefs.launchAtLogin = launchAtLogin;
+  }
+  if (cfg?.aiMode !== undefined) {
+    if (!AI_MODES.includes(cfg.aiMode)) throw new Error("Invalid AI mode.");
+    process.env.DRER_AI = cfg.aiMode;
+    prefs.aiMode = cfg.aiMode;
+  }
+  if (cfg?.localModel !== undefined) {
+    if (!LOCAL_MODELS.includes(cfg.localModel))
+      throw new Error("Invalid on-device model.");
+    process.env.DRER_LOCAL_MODEL = cfg.localModel;
+    prefs.localModel = cfg.localModel;
+  }
+  if (Object.keys(prefs).length) await patchConfig(prefs);
   if (typeof cfg?.model === "string") {
     if (!/^[A-Za-z0-9._/-]{1,120}$/.test(cfg.model))
       throw new Error("Invalid model ID.");
@@ -485,29 +524,14 @@ handle("config:save", async (cfg) => {
         "Secure key storage is unavailable. Configure GROQ_API_KEY in the environment for this session.",
       );
     const encrypted = await safeStorage.encryptStringAsync(candidate);
-    await fs.writeFile(
-      configFile(),
-      JSON.stringify({
-        encryptedKey: encrypted.toString("base64"),
-        model,
-        voice: voice.options,
-        voiceEnabled: savedVoiceEnabled,
-      }),
-      { mode: 0o600 },
-    );
+    await patchConfig({
+      encryptedKey: encrypted.toString("base64"),
+      model,
+      voice: voice.options,
+    });
     key = candidate;
   } else {
-    let existing = {};
-    try {
-      existing = JSON.parse(await fs.readFile(configFile(), "utf8"));
-    } catch {}
-    await fs.writeFile(
-      configFile(),
-      JSON.stringify({ ...existing, model, voice: voice.options }),
-      {
-        mode: 0o600,
-      },
-    );
+    await patchConfig({ model, voice: voice.options });
   }
   return config();
 });

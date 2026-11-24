@@ -34,6 +34,7 @@ contextBridge.exposeInMainWorld("drer", {
         "agent:busy",
         "reminder:due",
         "app:error",
+        "ai:progress",
         "test:result",
       ].includes(channel) ||
       typeof fn !== "function"
