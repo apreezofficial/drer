@@ -10,7 +10,13 @@ contextBridge.exposeInMainWorld("drer", {
   request: (payload) => ipcRenderer.invoke("agent:request", payload),
   confirm: (id) => ipcRenderer.invoke("agent:confirm", id),
   cancelPlan: (id) => ipcRenderer.invoke("agent:cancel-plan", id),
-  cancelRequest: () => ipcRenderer.invoke("agent:cancel-request"),
+  cancelRequest: (requestId) =>
+    ipcRenderer.invoke("agent:cancel-request", requestId),
+  tasks: () => ipcRenderer.invoke("tasks:list"),
+  approveTask: (id, opts) => ipcRenderer.invoke("tasks:approve", id, opts),
+  denyTask: (id) => ipcRenderer.invoke("tasks:deny", id),
+  stopTask: (id) => ipcRenderer.invoke("tasks:stop", id),
+  clearTasks: () => ipcRenderer.invoke("tasks:clear"),
   cancelReminder: (id) => ipcRenderer.invoke("agent:cancel-reminder", id),
   saveConfig: (cfg) => ipcRenderer.invoke("config:save", cfg),
   openNative: (application) =>
@@ -35,6 +41,8 @@ contextBridge.exposeInMainWorld("drer", {
         "reminder:due",
         "app:error",
         "ai:progress",
+        "tasks:update",
+        "tasks:done",
         "test:result",
       ].includes(channel) ||
       typeof fn !== "function"

@@ -1,6 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const qa = (sel) => [...document.querySelectorAll(sel)];
 let state = {},
+  busyChats = new Map(), // chatKey -> requestId
   busy = false,
   voiceEnabled = false,
   voiceLoaded = false,
@@ -143,7 +144,7 @@ function message(role, text, kind = "", persist = true) {
   $("messages").append(article);
   syncEmpty();
   article.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  if (persist && role !== "test") {
+  if (persist && role !== "test" && kind !== "task") {
     const chat = ensureChat();
     chat.messages.push({ role, text: String(text).slice(0, 4000), kind });
     chat.messages = chat.messages.slice(-200);
@@ -243,11 +244,17 @@ async function refresh() {
   $("local-model").value = state.localModel || "auto";
   showReminders(state.reminders);
 }
+const chatKey = () => (current ? current.id : "new");
 function setBusy(value) {
-  busy = value;
-  $("send").disabled = value;
-  $("cancel-request").hidden = !value;
-  $("request-status").textContent = value ? "Working…" : "Ready";
+  busy = busyChats.has(chatKey());
+  $("send").disabled = false;
+  $("cancel-request").hidden = !busy;
+  $("request-status").textContent = busy
+    ? "Working on this request…"
+    : busyChats.size
+      ? busyChats.size + " request" + (busyChats.size > 1 ? "s" : "") + " running in other chats"
+      : "Ready";
+  updateActivityBadge();
 }
 
 /* ---------- results ---------- */
@@ -280,6 +287,7 @@ function openResultButton(article, result) {
   article.append(button);
 }
 function renderResult(result) {
+  if (result.type === "task") return renderTaskCard(result.task);
   if (result.type === "plan") {
     const article = message("assistant", result.plan.text, "plan");
     const buttons = document.createElement("div");
@@ -351,20 +359,26 @@ function autoGrow() {
 $("question").addEventListener("input", autoGrow);
 $("request-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (busy) return;
   const question = $("question").value.trim();
   if (!question) return;
   const withScreen = $("with-screen").checked;
+  const chat = ensureChat();
+  const key = chat.id;
+  if (busyChats.has(key)) return;
   message("user", question + (withScreen ? "\n[Primary screen shared with Groq]" : ""));
   $("question").value = "";
   autoGrow();
-  setBusy(true);
+  const requestId = newId();
+  busyChats.set(key, requestId);
+  setBusy();
   try {
-    renderResult(await window.drer.request({ question, withScreen }));
+    const result = await window.drer.request({ question, withScreen, requestId, chatId: key });
+    renderResult(result, key);
   } catch (err) {
     message("assistant", err.message, "error");
   } finally {
-    setBusy(false);
+    busyChats.delete(key);
+    setBusy();
   }
 });
 $("question").addEventListener("keydown", (e) => {
@@ -373,7 +387,10 @@ $("question").addEventListener("keydown", (e) => {
     $("request-form").requestSubmit();
   }
 });
-$("cancel-request").addEventListener("click", () => window.drer.cancelRequest());
+$("cancel-request").addEventListener("click", () => {
+  const id = busyChats.get(chatKey());
+  if (id) window.drer.cancelRequest(id);
+});
 qa("[data-request]").forEach((button) =>
   button.addEventListener("click", () => {
     $("question").value = button.dataset.request;
@@ -398,13 +415,156 @@ window.drer.on("ai:progress", ({ fraction }) => {
   if (f >= 1) hideTimer = setTimeout(hideProgress, 1500);
 });
 
+
+/* ---------- commands (approval, live output, background) ---------- */
+let tasksById = new Map();
+const taskCards = new Map(); // taskId -> element in chat
+const statusWords = {
+  pending: "Waiting for your approval",
+  running: "Running",
+  done: "Finished",
+  failed: "Failed",
+  stopped: "Stopped",
+  denied: "Denied",
+};
+function renderTaskCard(task) {
+  tasksById.set(task.id, task);
+  const article = message("assistant", "DRER wants to run a command on this computer.", "task");
+  const code = document.createElement("pre");
+  code.className = "cmd";
+  code.textContent = "$ " + task.command;
+  const status = document.createElement("small");
+  status.className = "task-status";
+  const out = document.createElement("pre");
+  out.className = "cmd-out";
+  out.hidden = true;
+  const buttons = document.createElement("div");
+  buttons.className = "plan-actions";
+  const approve = document.createElement("button");
+  approve.className = "action-button";
+  approve.textContent = "Approve & run";
+  const bg = document.createElement("button");
+  bg.className = "pill";
+  bg.textContent = "Run in background";
+  const deny = document.createElement("button");
+  deny.className = "pill";
+  deny.textContent = "Deny";
+  buttons.append(approve, bg, deny);
+  const stop = document.createElement("button");
+  stop.className = "pill";
+  stop.textContent = "Stop";
+  stop.hidden = true;
+  article.append(code, status, out, buttons, stop);
+  taskCards.set(task.id, { article, status, out, buttons, stop });
+  const go = async (background) => {
+    approve.disabled = bg.disabled = deny.disabled = true;
+    try {
+      const t = await window.drer.approveTask(task.id, { background });
+      applyTask(t);
+    } catch (e) {
+      status.textContent = e.message;
+    }
+  };
+  approve.addEventListener("click", () => go(false));
+  bg.addEventListener("click", () => go(true));
+  deny.addEventListener("click", async () => {
+    buttons.remove();
+    applyTask(await window.drer.denyTask(task.id));
+  });
+  stop.addEventListener("click", () => window.drer.stopTask(task.id));
+  applyTask(task);
+  return article;
+}
+function applyTask(t) {
+  if (!t || !t.id) return;
+  tasksById.set(t.id, t);
+  const card = taskCards.get(t.id);
+  if (card) {
+    card.status.textContent = statusWords[t.status] + (t.background ? " · background" : "") + (t.exitCode != null ? " · exit " + t.exitCode : "");
+    card.out.hidden = !t.output;
+    card.out.textContent = t.output || "";
+    card.out.scrollTop = card.out.scrollHeight;
+    card.stop.hidden = t.status !== "running";
+    if (t.status !== "pending") card.buttons.remove();
+  }
+  renderActivity();
+  updateActivityBadge();
+}
+function renderActivity() {
+  const box = $("tasks");
+  if (!box) return;
+  box.replaceChildren();
+  const list = [...tasksById.values()].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+  if (!list.length) {
+    const p = document.createElement("p");
+    p.textContent = "No commands yet. When DRER proposes one, it appears here and in the chat for your approval.";
+    box.append(p);
+    return;
+  }
+  for (const t of list) {
+    const row = document.createElement("div");
+    row.className = "task-row " + t.status;
+    const head = document.createElement("div");
+    head.className = "task-head";
+    const cmd = document.createElement("code");
+    cmd.textContent = "$ " + t.command;
+    const st = document.createElement("small");
+    st.textContent = statusWords[t.status] + (t.background ? " · background" : "");
+    head.append(cmd, st);
+    row.append(head);
+    if (t.output) {
+      const o = document.createElement("pre");
+      o.className = "cmd-out";
+      o.textContent = t.output.slice(-1500);
+      row.append(o);
+    }
+    if (t.status === "running") {
+      const b = document.createElement("button");
+      b.className = "pill";
+      b.textContent = "Stop";
+      b.addEventListener("click", () => window.drer.stopTask(t.id));
+      row.append(b);
+    }
+    box.append(row);
+  }
+}
+function updateActivityBadge() {
+  const running = [...tasksById.values()].filter((t) => t.status === "running" || t.status === "pending").length;
+  const badge = $("activity-badge");
+  if (!badge) return;
+  badge.hidden = !running;
+  badge.textContent = String(running);
+}
+window.drer.on("tasks:update", (list) => {
+  for (const t of list) tasksById.set(t.id, t);
+  for (const t of list) applyTask(t);
+});
+window.drer.on("tasks:done", (t) => applyTask(t));
+window.drer.tasks().then((list) => {
+  for (const t of list) tasksById.set(t.id, t);
+  renderActivity();
+  updateActivityBadge();
+});
+$("clear-tasks").addEventListener("click", async () => {
+  await window.drer.clearTasks();
+  for (const [id, t] of tasksById) if (!["pending", "running"].includes(t.status)) tasksById.delete(id);
+  renderActivity();
+  updateActivityBadge();
+});
+
 /* ---------- navigation ---------- */
 qa(".rail-btn").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
 qa("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
 $("new-chat").addEventListener("click", startNewChat);
 window.drer.on("nav:settings", () => setView("settings"));
 window.drer.on("app:state", (data) => showReminders(data.reminders));
-window.drer.on("agent:busy", (data) => setBusy(data.busy));
+window.drer.on("agent:busy", (data) => {
+  // The submit handler owns busyChats for chat requests; this covers voice.
+  if (!data.busy && data.requestId && !busyChats.has(data.chatId)) return;
+  if (data.busy && data.requestId && data.chatId && !busyChats.has(data.chatId))
+    busyChats.set(data.chatId, data.requestId);
+  setBusy();
+});
 window.drer.on("reminder:due", async (item) => {
   $("alarm-title").textContent = item.title;
   $("alarm-banner").hidden = false;

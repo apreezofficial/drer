@@ -81,6 +81,12 @@ const TOOLS = [
     ["command"],
   ),
   tool(
+    "read_notes",
+    "Read the user's saved DRER notes (optionally only those mentioning a word). Use when they ask to check, find or read their notes.",
+    { query: str("Optional word to filter notes by.") },
+    [],
+  ),
+  tool(
     "look_at_screen",
     "Look at the user's current screen and analyze it. Use when they ask what is on their screen, to read it, explain an error they are looking at, or summarize it.",
     { question: str("What to find out from the screen.") },
@@ -164,6 +170,8 @@ function validateTool(call, now = Date.now()) {
         throw new Error("The AI produced an unusable command.");
       return { kind: "run_command", command };
     }
+    case "read_notes":
+      return { kind: "notes", query: cleanText(args.query || "", 100) };
     case "look_at_screen":
       return {
         kind: "look_screen",
@@ -197,7 +205,7 @@ const forcesTimer = (question) =>
 // Small on-device models call tools on plain questions, so only offer tools
 // when the request reads like an action.
 const wantsTools = (q) =>
-  /\b(schedules?|calendar|meetings?|agenda|events?|appointments?|screen|screenshot|command|terminal|shell|run|battery|disk|storage|wifi|network|git|npm|folder|files?)\b/i.test(
+  /\b(schedules?|notes?|calendar|meetings?|agenda|events?|appointments?|screen|screenshot|command|terminal|shell|run|battery|disk|storage|wifi|network|git|npm|folder|files?)\b/i.test(
     q,
   ) ||
   (/\b(timers?|countdown|alarms?|remind(?:er)?s?|notes?|open|launch|search|google|spotify|music|play|pause|next|previous|habit|cancel|list|apps?|applications?)\b/i.test(
@@ -215,6 +223,7 @@ async function queryAI({
   signal,
   onProgress,
   noTools = false,
+  context = "",
   local = require("./local-ai"),
 }) {
   const mode = provider();
@@ -222,7 +231,7 @@ async function queryAI({
     try {
       const r = await local.queryLocal({
         question,
-        system: SYSTEM_PROMPT(),
+        system: SYSTEM_PROMPT() + (context ? " " + context : ""),
         tools: !noTools && wantsTools(question) ? TOOLS : [],
         forcedTool: forcesTimer(question) ? "set_timer" : undefined,
         signal,
@@ -269,7 +278,7 @@ async function queryAI({
     : question;
   const timeout = AbortSignal.timeout(45000);
   const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
-  const system = SYSTEM_PROMPT();
+  const system = SYSTEM_PROMPT() + (context ? " " + context : "");
   const body = {
     model,
     max_completion_tokens: 1500,

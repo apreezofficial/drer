@@ -225,3 +225,23 @@ test("schedule questions offer tools even when phrased as what/how", async (t) =
   await queryAI({ question: "what schedules do i have today?", noTools: true, local });
   assert.equal(offered, 0);
 });
+
+test("notes questions offer the read_notes tool and validate it", async (t) => {
+  withMode(t, "auto");
+  const { validateTool } = require("../src/ai");
+  assert.deepEqual(
+    validateTool({ function: { name: "read_notes", arguments: '{"query":"gym"}' } }),
+    { kind: "notes", query: "gym" },
+  );
+  let offered;
+  const local = { queryLocal: async (o) => ((offered = o.tools.length), { text: "x", model: "m" }) };
+  await queryAI({ question: "check my notes for the gym plan", local });
+  assert.ok(offered > 0);
+});
+test("assistant context reaches the on-device system prompt", async (t) => {
+  withMode(t, "auto");
+  let system;
+  const local = { queryLocal: async (o) => ((system = o.system), { text: "x", model: "m" }) };
+  await queryAI({ question: "hi", context: "Home folder: /Users/x", local });
+  assert.match(system, /Home folder: \/Users\/x/);
+});

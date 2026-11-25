@@ -13,10 +13,11 @@ const {
   systemPreferences,
   Notification,
 } = require("electron");
-const { execFile } = require("node:child_process");
+const { execFile, spawn } = require("node:child_process");
 const { promisify } = require("node:util");
 const exec = promisify(execFile);
 const os = require("node:os");
+const crypto = require("node:crypto");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const { pathToFileURL } = require("node:url");
@@ -39,8 +40,6 @@ let window = null,
   store = null,
   key = process.env.GROQ_API_KEY || "",
   model = process.env.DRER_MODEL || DEFAULT_MODEL,
-  busy = false,
-  controller = null,
   shortcut = "",
   configurationReady = Promise.resolve(),
   encryptedKey = null,
@@ -272,32 +271,147 @@ async function readSchedule(day) {
       : "Nothing on your calendar or reminders for " + day + ".",
   };
 }
-function runShell(command) {
-  return new Promise((resolve) => {
-    execFile(
-      "/bin/zsh",
-      ["-lc", command],
-      { cwd: os.homedir(), timeout: 30000, maxBuffer: 1024 * 1024 },
-      (error, stdout, stderr) => {
-        const out = (String(stdout) + String(stderr)).trim();
-        const note = error?.killed
-          ? "\n[stopped after 30 seconds]"
-          : error && typeof error.code === "number"
-            ? "\n[exit code " + error.code + "]"
-            : "";
-        resolve((out.slice(0, 6000) || "(no output)") + note);
-      },
-    );
+// ---- Approved commands run as visible, stoppable tasks ----
+const requests = new Map(); // requestId -> AbortController (many chats at once)
+const tasks = new Map(); // taskId -> task
+const taskView = (t) => ({
+  id: t.id,
+  command: t.command,
+  status: t.status,
+  output: t.output,
+  chatId: t.chatId,
+  background: t.background,
+  exitCode: t.exitCode,
+  createdAt: t.createdAt,
+  startedAt: t.startedAt,
+  endedAt: t.endedAt,
+});
+let publishTimer = null;
+function publishTasks(now = false) {
+  if (now) {
+    clearTimeout(publishTimer);
+    publishTimer = null;
+    notify("tasks:update", [...tasks.values()].map(taskView));
+    return;
+  }
+  publishTimer ??= setTimeout(() => {
+    publishTimer = null;
+    notify("tasks:update", [...tasks.values()].map(taskView));
+  }, 200);
+}
+function createTask(command, chatId) {
+  const t = {
+    id: crypto.randomUUID(),
+    command,
+    status: "pending",
+    output: "",
+    chatId: chatId || null,
+    background: false,
+    createdAt: new Date().toISOString(),
+  };
+  tasks.set(t.id, t);
+  while (tasks.size > 60) {
+    const old = [...tasks.values()].find((x) => x.status !== "pending" && x.status !== "running");
+    if (!old) break;
+    tasks.delete(old.id);
+  }
+  publishTasks(true);
+  if (Notification.isSupported() && !(window?.isVisible() && window.isFocused())) {
+    const n = new Notification({
+      title: "DRER needs your approval",
+      body: "$ " + command.slice(0, 120),
+    });
+    n.on("click", () => showWindow());
+    n.show();
+  }
+  return t;
+}
+function startTask(id, { background = false } = {}) {
+  const t = tasks.get(id);
+  if (!t || t.status !== "pending")
+    throw new Error("This command was already handled or expired.");
+  t.status = "running";
+  t.background = background === true;
+  t.startedAt = new Date().toISOString();
+  const child = spawn("/bin/zsh", ["-lc", t.command], {
+    cwd: os.homedir(),
+    stdio: ["ignore", "pipe", "pipe"],
   });
+  t.child = child;
+  const add = (d) => {
+    t.output = (t.output + d.toString()).slice(-20000);
+    publishTasks();
+  };
+  child.stdout.on("data", add);
+  child.stderr.on("data", add);
+  // Foreground commands are capped at 2 minutes; background ones at 30.
+  const limit = t.background ? 30 * 60000 : 120000;
+  t.timer = setTimeout(() => {
+    t.timedOut = true;
+    child.kill("SIGTERM");
+  }, limit);
+  const finish = (code, signal, error) => {
+    if (t.endedAt) return;
+    clearTimeout(t.timer);
+    t.endedAt = new Date().toISOString();
+    t.exitCode = code;
+    if (error) t.output += "\n" + error.message;
+    if (t.stopped) t.status = "stopped";
+    else if (t.timedOut) {
+      t.status = "stopped";
+      t.output += "\n[stopped: took longer than " + limit / 60000 + " min]";
+    } else t.status = code === 0 ? "done" : "failed";
+    delete t.child;
+    publishTasks(true);
+    notify("tasks:done", taskView(t));
+  };
+  child.on("error", (e) => finish(null, null, e));
+  child.on("close", (code, signal) => finish(code, signal));
+  publishTasks(true);
+  return taskView(t);
+}
+function stopTask(id) {
+  const t = tasks.get(id);
+  if (!t || t.status !== "running") return taskView(t || {});
+  t.stopped = true;
+  t.child?.kill("SIGTERM");
+  setTimeout(() => t.child?.kill("SIGKILL"), 3000).unref();
+  return taskView(t);
+}
+function readNotes(query = "") {
+  const dir = store.workspace;
+  return fs
+    .readdir(dir)
+    .catch(() => [])
+    .then(async (names) => {
+      const files = [];
+      for (const n of names.filter((x) => x.endsWith(".md"))) {
+        const st = await fs.stat(path.join(dir, n)).catch(() => null);
+        if (st) files.push({ n, t: st.mtimeMs });
+      }
+      files.sort((a, b) => b.t - a.t);
+      const q = query.trim().toLowerCase();
+      const out = [];
+      let total = 0;
+      for (const f of files) {
+        const body = await fs.readFile(path.join(dir, f.n), "utf8").catch(() => "");
+        if (q && !(f.n + " " + body).toLowerCase().includes(q)) continue;
+        const piece = "## " + f.n.replace(/-\d{17}-[0-9a-f]{4}\.md$/, "") + " (" + new Date(f.t).toLocaleDateString() + ")\n" + body.slice(0, 1500);
+        if (total + piece.length > 6000) break;
+        out.push(piece);
+        total += piece.length;
+        if (out.length >= 15) break;
+      }
+      return out.length ? out.join("\n\n") : "No saved DRER notes" + (q ? " matching “" + query + "”" : "") + " yet.";
+    });
 }
 async function executeAction(action) {
   if (action.kind === "schedule") {
     const { label, text } = await readSchedule(action.day);
     return { kind: "schedule", text, label };
   }
-  if (action.kind === "run_command") {
-    const output = await runShell(action.command);
-    return { kind: "run_command", text: "$ " + action.command + "\n" + output };
+  if (action.kind === "notes") {
+    return { kind: "notes", text: await readNotes(action.query) };
   }
   if (process.platform === "darwin" && action.kind === "reminder") {
     const saved = await nativeRequest({
@@ -467,18 +581,27 @@ async function executeAction(action) {
   notify("app:state", store.summary());
   return { ...result, ...store.summary() };
 }
+function assistantContext() {
+  return (
+    "Platform: " + process.platform + ". Home folder: " + os.homedir() +
+    ". DRER notes are saved in " + store.workspace +
+    ". To check something on this computer, call run_command with one concrete, short, read-only shell command (for example `ls`, `df -h`, `pmset -g batt`, `git status`); the user must approve it. Apple Notes can be read with osascript. Never use sudo or destructive commands."
+  );
+}
 async function runRequest(payload) {
-  if (busy)
-    throw new Error(
-      "A request is already running. Cancel it or wait for the result.",
-    );
   const question = cleanText(
     payload?.question || "Describe what is on my screen.",
   );
   const withScreen = payload?.withScreen === true;
-  busy = true;
-  controller = new AbortController();
-  notify("agent:busy", { busy: true });
+  const requestId =
+    typeof payload?.requestId === "string" && payload.requestId.length < 80
+      ? payload.requestId
+      : crypto.randomUUID();
+  const chatId =
+    typeof payload?.chatId === "string" ? payload.chatId.slice(0, 80) : null;
+  const controller = new AbortController();
+  requests.set(requestId, controller);
+  notify("agent:busy", { busy: true, requestId, chatId });
   try {
     if (!withScreen) {
       const action = parseRequest(question);
@@ -505,6 +628,7 @@ async function runRequest(payload) {
     const result = await queryAI({
       key,
       model,
+      context: assistantContext(),
       question,
       image,
       signal: controller.signal,
@@ -515,16 +639,8 @@ async function runRequest(payload) {
       const kind = result.action.kind;
       if (kind === "run_command") {
         // Never run a model-chosen command without the user's explicit OK.
-        const plan = store.plan(result.action);
-        return {
-          type: "plan",
-          plan: {
-            id: plan.id,
-            text:
-              "DRER wants to run this command on your computer:\n\n$ " +
-              result.action.command,
-          },
-        };
+        const task = createTask(result.action.command, chatId);
+        return { type: "task", task: taskView(task) };
       }
       if (kind === "look_screen") {
         if (!key)
@@ -541,8 +657,12 @@ async function runRequest(payload) {
         });
         return { type: "reply", ...seen, screenshot: shot };
       }
-      if (kind === "schedule") {
+      if (kind === "schedule" || kind === "notes") {
         const data = await executeAction(result.action);
+        const source =
+          kind === "schedule"
+            ? "their calendar and reminders for " + result.action.day
+            : "their saved DRER notes";
         try {
           const answer = await queryAI({
             key,
@@ -551,8 +671,8 @@ async function runRequest(payload) {
             question:
               'The user asked: "' +
               question +
-              '"\nHere is the real data from their calendar and reminders for ' +
-              data.label +
+              '"\nHere is the real data from ' +
+              source +
               ". Answer briefly using only this data.\n\n" +
               data.text,
             signal: controller.signal,
@@ -574,14 +694,13 @@ async function runRequest(payload) {
   } catch (e) {
     return {
       type: "error",
-      text: controller?.signal.aborted
+      text: controller.signal.aborted
         ? "Request cancelled."
         : e.message || "Request failed.",
     };
   } finally {
-    busy = false;
-    controller = null;
-    notify("agent:busy", { busy: false });
+    requests.delete(requestId);
+    notify("agent:busy", { busy: false, requestId, chatId });
   }
 }
 handle("app:state", () => ({ ...config(), ...store.summary() }));
@@ -608,9 +727,31 @@ handle("agent:cancel-reminder", async (id) => {
   notify("app:state", store.summary());
   return store.summary();
 });
-handle("agent:cancel-request", () => {
-  controller?.abort();
+handle("agent:cancel-request", (requestId) => {
+  if (typeof requestId === "string") requests.get(requestId)?.abort();
+  else for (const c of requests.values()) c.abort();
   return { ok: true };
+});
+handle("tasks:list", () => [...tasks.values()].map(taskView));
+handle("tasks:approve", (id, opts) => {
+  if (typeof id !== "string") throw new Error("Invalid task.");
+  return startTask(id, { background: opts?.background === true });
+});
+handle("tasks:deny", (id) => {
+  const t = tasks.get(id);
+  if (t?.status === "pending") {
+    t.status = "denied";
+    t.endedAt = new Date().toISOString();
+    publishTasks(true);
+  }
+  return taskView(t || {});
+});
+handle("tasks:stop", (id) => stopTask(id));
+handle("tasks:clear", () => {
+  for (const [id, t] of tasks)
+    if (!["pending", "running"].includes(t.status)) tasks.delete(id);
+  publishTasks(true);
+  return [...tasks.values()].map(taskView);
 });
 handle("config:save", async (cfg) => {
   const prefs = {};
@@ -871,7 +1012,8 @@ app.on("activate", () => {
 });
 app.on("before-quit", () => {
   app.isQuitting = true;
-  controller?.abort();
+  for (const c of requests.values()) c.abort();
+  for (const t of tasks.values()) t.child?.kill("SIGTERM");
   voice.stop();
 });
 app.on("will-quit", () => globalShortcut.unregisterAll());

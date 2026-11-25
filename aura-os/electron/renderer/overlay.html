@@ -28,8 +28,9 @@
         <button class="rail-btn active" data-view="chat" aria-label="Chat" title="Chat">
           <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" /></svg>
         </button>
-        <button class="rail-btn" data-view="tasks" aria-label="Reminders" title="Reminders">
+        <button class="rail-btn" data-view="tasks" aria-label="Activity" title="Activity">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+          <span class="badge" id="activity-badge" hidden>0</span>
         </button>
         <button class="rail-btn" data-view="voice" aria-label="Voice" title="Voice">
           <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" /></svg>
@@ -139,8 +140,11 @@
 
         <section class="view" id="view-tasks" hidden>
           <div class="page">
-            <h1>Reminders</h1>
-            <p class="lead">Timers, alarms and reminders you have scheduled.</p>
+            <h1>Activity</h1>
+            <p class="lead">Commands DRER runs for you, and the reminders you have scheduled. Commands only run after you approve them.</p>
+            <div class="section-head"><h3>Commands</h3><button class="pill" id="clear-tasks">Clear finished</button></div>
+            <div id="tasks" class="card list"></div>
+            <div class="section-head"><h3>Reminders</h3></div>
             <div id="reminders" class="card list"></div>
           </div>
         </section>
