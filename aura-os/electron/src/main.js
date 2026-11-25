@@ -581,18 +581,54 @@ async function executeAction(action) {
   notify("app:state", store.summary());
   return { ...result, ...store.summary() };
 }
-function assistantContext() {
+function assistantContext(history = []) {
+  const recent = (Array.isArray(history) ? history : [])
+    .slice(-6)
+    .map((m) => (m.role === "user" ? "User: " : "DRER: ") + String(m.text || "").slice(0, 400))
+    .join("\n");
   return (
+    (recent ? "Recent conversation (use it to resolve words like 'them' or 'that'):\n" + recent + "\n" : "") +
     "Platform: " + process.platform + ". Home folder: " + os.homedir() +
     ". DRER notes are saved in " + store.workspace +
     ". To check something on this computer, call run_command with one concrete, short, read-only shell command (for example `ls`, `df -h`, `pmset -g batt`, `git status`); the user must approve it. Apple Notes can be read with osascript. Never use sudo or destructive commands."
   );
 }
+// Deterministic routing for requests with a clear intent. A small on-device
+// model picks tools unreliably, so these never depend on it.
+function routeIntent(q) {
+  const text = q.trim();
+  if (
+    /\bnotes?\b/i.test(text) &&
+    /\b(check|read|show|what|list|find|search|look|open|summari[sz]e|any)\b/i.test(text) &&
+    !/\b(save|write|create|make|new)\b/i.test(text)
+  ) {
+    const m = text.match(/\b(?:about|for|mentioning|with|on)\s+(.+)$/i);
+    return { kind: "notes", query: m ? m[1].replace(/[?.!]+$/, "").trim() : "" };
+  }
+  if (
+    /\b(schedules?|calendar|meetings?|agenda|appointments?|events?)\b/i.test(text) &&
+    /\b(today|tomorrow|have|what|my|do i|on)\b/i.test(text)
+  ) {
+    return { kind: "schedule", day: /\btomorrow\b/i.test(text) ? "tomorrow" : "today" };
+  }
+  if (
+    /\b(list|show|what)\b.*\b(installed\s+)?(apps|applications)\b/i.test(text) ||
+    /\bapps?\s+(?:are\s+)?installed\b/i.test(text)
+  )
+    return { kind: "list_applications" };
+  if (
+    /\b(screen|screenshot)\b/i.test(text) &&
+    /\b(what|read|look|see|describe|explain|summari[sz]e|on)\b/i.test(text) &&
+    !/\b(save|write|create)\b/i.test(text)
+  )
+    return { kind: "look_screen", question: text };
+  return null;
+}
 async function runRequest(payload) {
   const question = cleanText(
     payload?.question || "Describe what is on my screen.",
   );
-  const withScreen = payload?.withScreen === true;
+  let withScreen = payload?.withScreen === true;
   const requestId =
     typeof payload?.requestId === "string" && payload.requestId.length < 80
       ? payload.requestId
@@ -604,13 +640,26 @@ async function runRequest(payload) {
   notify("agent:busy", { busy: true, requestId, chatId });
   try {
     if (!withScreen) {
-      const action = parseRequest(question);
-      if (action)
-        return {
-          type: "result",
-          route: "local-action",
-          ...(await executeAction(action)),
-        };
+      const action = parseRequest(question) || routeIntent(question);
+      if (action) {
+        if (action.kind === "look_screen") {
+          withScreen = true; // handled by the screen path below (needs Groq)
+        } else if (action.kind === "schedule" || action.kind === "notes" || action.kind === "list_applications") {
+          await configurationReady;
+          if (!key && encryptedKey) {
+            const decrypted = await safeStorage.decryptStringAsync(Buffer.from(encryptedKey, "base64"));
+            key = decrypted.result;
+          }
+          const data = await executeAction(action);
+          return { type: "result", route: "local-action", ...data, ...store.summary() };
+        } else {
+          return {
+            type: "result",
+            route: "local-action",
+            ...(await executeAction(action)),
+          };
+        }
+      }
     }
     await configurationReady;
     if (!key && encryptedKey) {
@@ -628,7 +677,7 @@ async function runRequest(payload) {
     const result = await queryAI({
       key,
       model,
-      context: assistantContext(),
+      context: assistantContext(payload?.history),
       question,
       image,
       signal: controller.signal,

@@ -1090,3 +1090,77 @@ code {
 .task-row .cmd-out {
   margin-top: 10px;
 }
+
+/* ---------- markdown in assistant replies ---------- */
+.md {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.md p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.md strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.md code {
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--panel-3);
+  color: var(--accent-soft);
+  padding: 1px 6px;
+  border-radius: 6px;
+  max-width: none;
+  white-space: pre-wrap;
+}
+.md-h {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+}
+h2.md-h {
+  font-size: 18px;
+}
+h3.md-h {
+  font-size: 16px;
+}
+h4.md-h {
+  font-size: 14px;
+  color: var(--accent-soft);
+}
+.md-list {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.md-list li {
+  color: var(--text);
+  line-height: 1.55;
+  padding-left: 2px;
+}
+.md-list li::marker {
+  color: var(--accent);
+}
+.md-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #0a0b0c;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
+  overflow: auto;
+  user-select: text;
+}
+.md-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: default;
+}

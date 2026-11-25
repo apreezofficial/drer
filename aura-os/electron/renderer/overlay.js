@@ -132,14 +132,97 @@ $("settings-search").addEventListener("input", (e) => {
 });
 
 /* ---------- messages ---------- */
+/* ---------- markdown (safe: builds DOM nodes, never innerHTML) ---------- */
+function inline(parent, text) {
+  // **bold**, `code`, [label](https://...) — everything else is plain text.
+  const re = /(\*\*[^*\n]+\*\*|`[^`\n]+`|\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))/g;
+  let last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) parent.append(text.slice(last, m.index));
+    const tok = m[0];
+    if (tok.startsWith("**")) {
+      const b = document.createElement("strong");
+      b.textContent = tok.slice(2, -2);
+      parent.append(b);
+    } else if (tok.startsWith("`")) {
+      const c = document.createElement("code");
+      c.textContent = tok.slice(1, -1);
+      parent.append(c);
+    } else {
+      const [, label, url] = tok.match(/^\[([^\]]+)\]\((.+)\)$/);
+      const a = document.createElement("span");
+      a.className = "md-link";
+      a.textContent = label;
+      a.title = url;
+      parent.append(a);
+    }
+    last = m.index + tok.length;
+  }
+  if (last < text.length) parent.append(text.slice(last));
+}
+function renderMarkdown(container, text) {
+  const lines = String(text).replace(/\r/g, "").split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (/^```/.test(line)) {
+      const body = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) body.push(lines[i++]);
+      i++;
+      const pre = document.createElement("pre");
+      pre.className = "md-code";
+      pre.textContent = body.join("\n");
+      container.append(pre);
+      continue;
+    }
+    const h = line.match(/^(#{1,3})\s+(.*)$/);
+    if (h) {
+      const el = document.createElement(h[1].length === 1 ? "h2" : h[1].length === 2 ? "h3" : "h4");
+      el.className = "md-h";
+      inline(el, h[2]);
+      container.append(el);
+      i++;
+      continue;
+    }
+    if (/^\s*([-*•])\s+/.test(line) || /^\s*\d+[.)]\s+/.test(line)) {
+      const ordered = /^\s*\d+[.)]\s+/.test(line);
+      const list = document.createElement(ordered ? "ol" : "ul");
+      list.className = "md-list";
+      while (i < lines.length && (ordered ? /^\s*\d+[.)]\s+/ : /^\s*([-*•])\s+/).test(lines[i])) {
+        const li = document.createElement("li");
+        inline(li, lines[i].replace(/^\s*(?:[-*•]|\d+[.)])\s+/, ""));
+        list.append(li);
+        i++;
+      }
+      container.append(list);
+      continue;
+    }
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
+    const p = document.createElement("p");
+    inline(p, line);
+    container.append(p);
+    i++;
+  }
+}
+
 function message(role, text, kind = "", persist = true) {
   const article = document.createElement("article");
   article.className = "message " + role + " " + kind;
   const label = document.createElement("span");
   label.className = "message-label";
   label.textContent = role === "reminder" ? "Reminder delivered" : role === "test" ? "Recorded system test" : "DRER";
-  const content = document.createElement("p");
-  content.textContent = text;
+  const content = document.createElement("div");
+  content.className = "md";
+  if (role === "assistant" && kind !== "error" && kind !== "task") renderMarkdown(content, text);
+  else {
+    const p = document.createElement("p");
+    p.textContent = text;
+    content.append(p);
+  }
   article.append(label, content);
   $("messages").append(article);
   syncEmpty();
@@ -372,7 +455,8 @@ $("request-form").addEventListener("submit", async (e) => {
   busyChats.set(key, requestId);
   setBusy();
   try {
-    const result = await window.drer.request({ question, withScreen, requestId, chatId: key });
+    const history = chat.messages.slice(-7, -1);
+    const result = await window.drer.request({ question, withScreen, requestId, chatId: key, history });
     renderResult(result, key);
   } catch (err) {
     message("assistant", err.message, "error");
