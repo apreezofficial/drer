@@ -16,7 +16,9 @@
 	<string>1</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+  <string>DRER reads your calendar when you ask about your schedule.</string>
+  <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>DRER adds the calendar events you request to Apple Calendar.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>DRER listens for your chosen wake name only while you enable voice mode.</string>

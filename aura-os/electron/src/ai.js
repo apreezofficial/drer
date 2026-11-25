@@ -68,6 +68,24 @@ const TOOLS = [
     },
     ["command"],
   ),
+  tool(
+    "get_schedule",
+    "Read the user's REAL Apple Calendar events and due reminders for a day. Use this for any question about their schedule, meetings, agenda, plans or what is on today or tomorrow.",
+    { day: { type: "string", enum: ["today", "tomorrow"] } },
+    [],
+  ),
+  tool(
+    "run_command",
+    "Run one shell command on this computer to look something up or do a task (files, disk, battery, network, git, processes). The user is asked to approve it before it runs, so prefer read-only commands.",
+    { command: str("The exact shell command to run.") },
+    ["command"],
+  ),
+  tool(
+    "look_at_screen",
+    "Look at the user's current screen and analyze it. Use when they ask what is on their screen, to read it, explain an error they are looking at, or summarize it.",
+    { question: str("What to find out from the screen.") },
+    [],
+  ),
   tool("list_applications", "List installed apps on this Mac.", {}, []),
   tool("list_reminders", "Read the actual local timers and reminders.", {}, []),
   tool(
@@ -135,6 +153,25 @@ function validateTool(call, now = Date.now()) {
       if (!["play", "pause", "next", "previous"].includes(args.command))
         throw new Error("Invalid playback action.");
       return { kind: "spotify_control", command: args.command };
+    case "get_schedule":
+      return {
+        kind: "schedule",
+        day: args.day === "tomorrow" ? "tomorrow" : "today",
+      };
+    case "run_command": {
+      const command = String(args.command ?? "").trim();
+      if (!command || command.length > 2000 || command.includes("\0"))
+        throw new Error("The AI produced an unusable command.");
+      return { kind: "run_command", command };
+    }
+    case "look_at_screen":
+      return {
+        kind: "look_screen",
+        question: cleanText(
+          args.question || "Describe the screen and explain a useful next step.",
+          500,
+        ),
+      };
     case "list_applications":
       return { kind: "list_applications" };
     case "list_reminders":
@@ -160,9 +197,13 @@ const forcesTimer = (question) =>
 // Small on-device models call tools on plain questions, so only offer tools
 // when the request reads like an action.
 const wantsTools = (q) =>
-  /\b(timers?|countdown|alarms?|remind(?:er)?s?|notes?|open|launch|search|google|spotify|music|play|pause|next|previous|habit|cancel|list|apps?|applications?)\b/i.test(
+  /\b(schedules?|calendar|meetings?|agenda|events?|appointments?|screen|screenshot|command|terminal|shell|run|battery|disk|storage|wifi|network|git|npm|folder|files?)\b/i.test(
     q,
-  ) && !/^\s*(?:how|why|what|explain|who|when|define)\b/i.test(q);
+  ) ||
+  (/\b(timers?|countdown|alarms?|remind(?:er)?s?|notes?|open|launch|search|google|spotify|music|play|pause|next|previous|habit|cancel|list|apps?|applications?)\b/i.test(
+    q,
+  ) &&
+    !/^\s*(?:how|why|what|explain|who|when|define)\b/i.test(q));
 // DRER_AI: "auto" (default) = on-device for text, Groq for screen images;
 // "local" = never use the network; "groq" = always Groq.
 const provider = () => (process.env.DRER_AI || "auto").toLowerCase();
@@ -173,6 +214,7 @@ async function queryAI({
   image,
   signal,
   onProgress,
+  noTools = false,
   local = require("./local-ai"),
 }) {
   const mode = provider();
@@ -181,7 +223,7 @@ async function queryAI({
       const r = await local.queryLocal({
         question,
         system: SYSTEM_PROMPT(),
-        tools: wantsTools(question) ? TOOLS : [],
+        tools: !noTools && wantsTools(question) ? TOOLS : [],
         forcedTool: forcesTimer(question) ? "set_timer" : undefined,
         signal,
         onProgress,
@@ -236,7 +278,7 @@ async function queryAI({
       { role: "user", content },
     ],
   };
-  if (!image) {
+  if (!image && !noTools) {
     body.tools = TOOLS;
     body.tool_choice = forcesTimer(question)
       ? { type: "function", function: { name: "set_timer" } }

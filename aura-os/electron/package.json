@@ -43,7 +43,8 @@
         "NSRemindersFullAccessUsageDescription": "DRER creates native reminders and timed alerts you request.",
         "NSCalendarsWriteOnlyAccessUsageDescription": "DRER adds events you request to Apple Calendar.",
         "LSUIElement": true,
-        "NSSpeechRecognitionUsageDescription": "DRER recognizes spoken commands when you enable voice mode."
+        "NSSpeechRecognitionUsageDescription": "DRER recognizes spoken commands when you enable voice mode.",
+        "NSCalendarsFullAccessUsageDescription": "DRER reads your calendar when you ask about your schedule."
       },
       "identity": null,
       "icon": "assets/icon.icns",

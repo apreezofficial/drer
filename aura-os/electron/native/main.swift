@@ -98,6 +98,24 @@ Task { @MainActor in
             if request.operation == "complete-reminder" { reminder.isCompleted=true;try store.save(reminder,commit:true) }
             emit(["ok":true,"service":"Apple Reminders","identifier":reminder.calendarItemIdentifier,"title":reminder.title ?? "","completed":reminder.isCompleted,"verified":true])
         }
+        if request.operation == "read-calendar" {
+            guard try await store.requestFullAccessToEvents() else { throw NSError(domain:"DRER",code:2,userInfo:[NSLocalizedDescriptionKey:"macOS Calendar access was not granted. Enable DRER in Privacy & Security → Calendars."]) }
+            let predicate=store.predicateForEvents(withStart:try date(request.startAt),end:try date(request.endAt),calendars:nil)
+            let formatter=ISO8601DateFormatter()
+            let events=store.events(matching:predicate).sorted { $0.startDate < $1.startDate }
+            emit(["ok":true,"events":events.map { ["title":$0.title ?? "","startAt":formatter.string(from:$0.startDate),"endAt":formatter.string(from:$0.endDate),"allDay":$0.isAllDay,"calendar":$0.calendar.title,"location":$0.location ?? ""] as [String:Any] }])
+        }
+        if request.operation == "read-reminders" {
+            guard try await store.requestFullAccessToReminders() else { throw NSError(domain:"DRER",code:2,userInfo:[NSLocalizedDescriptionKey:"macOS Reminders access was not granted. Enable DRER in Privacy & Security → Reminders."]) }
+            let predicate=store.predicateForIncompleteReminders(withDueDateStarting:nil,ending:try date(request.endAt),calendars:nil)
+            let items:[EKReminder]=await withCheckedContinuation { continuation in store.fetchReminders(matching:predicate) { continuation.resume(returning:$0 ?? []) } }
+            let formatter=ISO8601DateFormatter()
+            emit(["ok":true,"reminders":items.map { item -> [String:Any] in
+                var due=""
+                if let c=item.dueDateComponents,let d=Calendar.current.date(from:c) { due=formatter.string(from:d) }
+                return ["title":item.title ?? "","dueAt":due,"list":item.calendar.title]
+            }])
+        }
         if ["calendar-event", "authorize-calendar"].contains(request.operation) {
             guard try await store.requestWriteOnlyAccessToEvents() else { throw NSError(domain:"DRER",code:2,userInfo:[NSLocalizedDescriptionKey:"macOS Calendar access was not granted."]) }
             if request.operation == "authorize-calendar" { emit(["ok":true,"service":"Apple Calendar","authorized":true]) }

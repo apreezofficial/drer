@@ -16,6 +16,7 @@ const {
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
 const exec = promisify(execFile);
+const os = require("node:os");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const { pathToFileURL } = require("node:url");
@@ -223,7 +224,81 @@ async function captureScreen() {
     await showWindow();
   }
 }
+function dayRange(day) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  if (day === "tomorrow") start.setDate(start.getDate() + 1);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  return { start, end };
+}
+// Real Apple Calendar events and due reminders for a day, as plain text.
+async function readSchedule(day) {
+  if (process.platform !== "darwin")
+    throw new Error("Reading your calendar is available on macOS.");
+  const { start, end } = dayRange(day);
+  const [cal, rem] = await Promise.all([
+    nativeRequest({
+      operation: "read-calendar",
+      startAt: start.toISOString(),
+      endAt: end.toISOString(),
+    }),
+    nativeRequest({ operation: "read-reminders", endAt: end.toISOString() }),
+  ]);
+  const time = (iso) =>
+    new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  const lines = [];
+  for (const e of cal.events || [])
+    lines.push(
+      (e.allDay ? "All day" : time(e.startAt) + "–" + time(e.endAt)) +
+        "  " +
+        e.title +
+        (e.location ? " (" + e.location + ")" : "") +
+        "  [" +
+        e.calendar +
+        "]",
+    );
+  const due = (rem.reminders || []).filter(
+    (r) => !r.dueAt || new Date(r.dueAt) < end,
+  );
+  for (const r of due)
+    lines.push(
+      "Reminder " + (r.dueAt ? time(r.dueAt) : "(no time)") + "  " + r.title,
+    );
+  return {
+    label: day,
+    text: lines.length
+      ? lines.join("\n")
+      : "Nothing on your calendar or reminders for " + day + ".",
+  };
+}
+function runShell(command) {
+  return new Promise((resolve) => {
+    execFile(
+      "/bin/zsh",
+      ["-lc", command],
+      { cwd: os.homedir(), timeout: 30000, maxBuffer: 1024 * 1024 },
+      (error, stdout, stderr) => {
+        const out = (String(stdout) + String(stderr)).trim();
+        const note = error?.killed
+          ? "\n[stopped after 30 seconds]"
+          : error && typeof error.code === "number"
+            ? "\n[exit code " + error.code + "]"
+            : "";
+        resolve((out.slice(0, 6000) || "(no output)") + note);
+      },
+    );
+  });
+}
 async function executeAction(action) {
+  if (action.kind === "schedule") {
+    const { label, text } = await readSchedule(action.day);
+    return { kind: "schedule", text, label };
+  }
+  if (action.kind === "run_command") {
+    const output = await runShell(action.command);
+    return { kind: "run_command", text: "$ " + action.command + "\n" + output };
+  }
   if (process.platform === "darwin" && action.kind === "reminder") {
     const saved = await nativeRequest({
       operation: "reminder",
@@ -437,6 +512,56 @@ async function runRequest(payload) {
     });
     if (result.action) {
       if (controller.signal.aborted) throw new Error("Request cancelled.");
+      const kind = result.action.kind;
+      if (kind === "run_command") {
+        // Never run a model-chosen command without the user's explicit OK.
+        const plan = store.plan(result.action);
+        return {
+          type: "plan",
+          plan: {
+            id: plan.id,
+            text:
+              "DRER wants to run this command on your computer:\n\n$ " +
+              result.action.command,
+          },
+        };
+      }
+      if (kind === "look_screen") {
+        if (!key)
+          throw new Error(
+            "Looking at your screen needs a Groq key (the on-device model can’t see images yet). Add one in Settings.",
+          );
+        const shot = await captureScreen();
+        const seen = await queryAI({
+          key,
+          model,
+          question: result.action.question,
+          image: shot,
+          signal: controller.signal,
+        });
+        return { type: "reply", ...seen, screenshot: shot };
+      }
+      if (kind === "schedule") {
+        const data = await executeAction(result.action);
+        try {
+          const answer = await queryAI({
+            key,
+            model,
+            noTools: true,
+            question:
+              'The user asked: "' +
+              question +
+              '"\nHere is the real data from their calendar and reminders for ' +
+              data.label +
+              ". Answer briefly using only this data.\n\n" +
+              data.text,
+            signal: controller.signal,
+          });
+          return { type: "reply", ...answer, text: answer.text || data.text };
+        } catch {
+          return { type: "result", ...data };
+        }
+      }
       return {
         type: "result",
         route: "ai-tool",

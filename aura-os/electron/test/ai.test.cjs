@@ -204,3 +204,24 @@ test("auto mode falls back to Groq only when on-device fails and a key exists", 
   assert.equal((await queryAI({ key: "k", question: "hi", local })).text, "from groq");
   await assert.rejects(() => queryAI({ question: "hi", local }), /fallback/);
 });
+
+test("schedule, command and screen tools validate their arguments", () => {
+  const { validateTool } = require("../src/ai");
+  const call = (name, args) => validateTool({ function: { name, arguments: JSON.stringify(args) } });
+  assert.deepEqual(call("get_schedule", { day: "tomorrow" }), { kind: "schedule", day: "tomorrow" });
+  assert.equal(call("get_schedule", {}).day, "today");
+  assert.deepEqual(call("run_command", { command: " df -h " }), { kind: "run_command", command: "df -h" });
+  assert.throws(() => call("run_command", { command: "  " }));
+  assert.equal(call("look_at_screen", { question: "what error?" }).kind, "look_screen");
+});
+test("schedule questions offer tools even when phrased as what/how", async (t) => {
+  withMode(t, "auto");
+  let offered;
+  const local = { queryLocal: async (o) => ((offered = o.tools.length), { text: "x", model: "m" }) };
+  await queryAI({ question: "what schedules do i have today?", local });
+  assert.ok(offered > 0);
+  await queryAI({ question: "what is a kernel?", local });
+  assert.equal(offered, 0);
+  await queryAI({ question: "what schedules do i have today?", noTools: true, local });
+  assert.equal(offered, 0);
+});
