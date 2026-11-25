@@ -210,15 +210,20 @@ class VoiceService {
         } catch {}
       }
     });
-    child.stderr.on("data", () => {});
+    let lastErr = "";
+    child.stderr.on("data", (d) => (lastErr = d.toString().slice(-300)));
     child.on("error", (error) => {
       if (token !== this.generation) return;
       this.enabled = false;
       this.child = null;
       this.status(error.message);
     });
-    child.on("exit", () => {
+    child.on("exit", (code, signal) => {
       if (token !== this.generation) return;
+      console.warn(
+        "DRER listener exited (code " + code + ", signal " + signal + ")",
+        lastErr.trim(),
+      );
       this.child = null;
       this.scheduleRestart();
     });
