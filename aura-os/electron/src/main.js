@@ -405,15 +405,7 @@ function readNotes(query = "") {
       return out.length ? out.join("\n\n") : "No saved DRER notes" + (q ? " matching “" + query + "”" : "") + " yet.";
     });
 }
-async function executeAction(action) {
-  if (action.kind === "schedule") {
-    const { label, text } = await readSchedule(action.day);
-    return { kind: "schedule", text, label };
-  }
-  if (action.kind === "notes") {
-    return { kind: "notes", text: await readNotes(action.query) };
-  }
-  if (process.platform === "darwin" && action.kind === "reminder") {
+async function saveNativeReminder(action) {
     const saved = await nativeRequest({
       operation: "reminder",
       title: action.title,
@@ -444,6 +436,31 @@ async function executeAction(action) {
       text: `Set in Apple Reminders: ${action.title}\n${new Date(action.dueAt).toLocaleString()}\nmacOS owns this timed alert. It remains scheduled after DRER quits.`,
       ...store.summary(),
     };
+}
+
+async function executeAction(action) {
+  if (action.kind === "schedule") {
+    const { label, text } = await readSchedule(action.day);
+    return { kind: "schedule", text, label };
+  }
+  if (action.kind === "notes") {
+    return { kind: "notes", text: await readNotes(action.query) };
+  }
+  if (process.platform === "darwin" && action.kind === "reminder") {
+    try {
+      return await saveNativeReminder(action);
+    } catch (e) {
+      // Reminders refused or unavailable: still run the timer inside DRER.
+      const local = await store.execute(action);
+      return {
+        ...local,
+        text:
+          (local.text || "Timer set.") +
+          "\n(Not in Apple Reminders: " +
+          (e.message || "access not granted") +
+          ". Grant access in Settings → Permissions to also get a macOS alert.)",
+      };
+    }
   }
   if (process.platform === "darwin" && action.kind === "calendar_draft") {
     const saved = await nativeRequest({
@@ -907,6 +924,21 @@ handle("app:open-link", async (url) => {
   await shell.openExternal(url);
   return { ok: true };
 });
+// Ask macOS for Reminders and Calendar access. The system shows the prompt
+// the first time; afterwards it just reports the current state.
+async function requestMacAccess() {
+  if (process.platform !== "darwin") return { reminders: false, calendar: false };
+  const result = { reminders: false, calendar: false };
+  for (const [key, op] of [["reminders", "authorize-reminders"], ["calendar", "authorize-calendar"]]) {
+    try {
+      await nativeRequest({ operation: op }, { timeout: 120000 });
+      result[key] = true;
+    } catch {}
+  }
+  notify("app:state", store.summary());
+  return result;
+}
+handle("app:request-access", () => requestMacAccess());
 handle("app:permissions", async () => {
   if (process.platform === "darwin")
     await shell.openExternal(
@@ -1026,6 +1058,8 @@ if (!app.requestSingleInstanceLock()) {
       configurationReady = loadConfig().then(() => {
         notify("config:ready");
         applyLaunchAtLogin();
+        // Ask for Reminders/Calendar up front so timers become native alerts.
+        requestMacAccess().catch(() => {});
         if (savedVoiceEnabled || process.argv.includes("--voice")) {
           voice.start();
           // Preload an already-downloaded model so the first command is fast.

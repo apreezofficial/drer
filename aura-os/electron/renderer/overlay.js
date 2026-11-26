@@ -680,6 +680,16 @@ qa("#ai-mode button").forEach((b) => b.addEventListener("click", () => save({ ai
 $("local-model").addEventListener("change", (e) => save({ localModel: e.target.value }));
 $("get-key").addEventListener("click", () => window.drer.openLink("https://console.groq.com/keys"));
 $("screen-settings").addEventListener("click", () => window.drer.permissions());
+$("grant-access").addEventListener("click", async () => {
+  $("native-status").textContent = "Asking macOS…";
+  try {
+    const r = await window.drer.requestAccess();
+    $("native-status").textContent =
+      "Reminders: " + (r.reminders ? "allowed" : "not allowed") + " · Calendar: " + (r.calendar ? "allowed" : "not allowed") + ".";
+  } catch (e) {
+    $("native-status").textContent = e.message;
+  }
+});
 $("settings-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   $("save-settings").disabled = true;

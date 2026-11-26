@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld("drer", {
   openResult: (file) => ipcRenderer.invoke("app:open-result", file),
   openLink: (url) => ipcRenderer.invoke("app:open-link", url),
   permissions: () => ipcRenderer.invoke("app:permissions"),
+  requestAccess: () => ipcRenderer.invoke("app:request-access"),
   hide: () => ipcRenderer.invoke("app:hide"),
   on: (channel, fn) => {
     if (
