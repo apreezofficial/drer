@@ -188,7 +188,7 @@ test("local mode refuses screens and never falls back to Groq", async (t) => {
     /On-device AI failed: boom/,
   );
 });
-test("auto mode falls back to Groq only when on-device fails and a key exists", async (t) => {
+test("auto mode prefers Groq when a key exists and falls back on-device if Groq fails", async (t) => {
   withMode(t, "auto");
   const original = global.fetch;
   t.after(() => (global.fetch = original));
@@ -196,13 +196,20 @@ test("auto mode falls back to Groq only when on-device fails and a key exists", 
     ok: true,
     json: async () => ({ choices: [{ message: { content: "from groq" } }] }),
   });
-  const local = {
-    queryLocal: async () => {
-      throw new Error("no model");
-    },
-  };
+  const local = { queryLocal: async () => assert.fail("groq should answer first") };
   assert.equal((await queryAI({ key: "k", question: "hi", local })).text, "from groq");
-  await assert.rejects(() => queryAI({ question: "hi", local }), /fallback/);
+  global.fetch = async () => {
+    throw new Error("offline");
+  };
+  const onDevice = { queryLocal: async () => ({ text: "local answer", model: "nano-1b" }) };
+  const r = await queryAI({ key: "k", question: "hi", local: onDevice });
+  assert.equal(r.text, "local answer");
+  assert.equal(r.local, true);
+});
+test("auto mode without a key stays on-device", async (t) => {
+  withMode(t, "auto");
+  const local = { queryLocal: async () => ({ text: "local", model: "m" }) };
+  assert.equal((await queryAI({ question: "hi", local })).local, true);
 });
 
 test("schedule, command and screen tools validate their arguments", () => {

@@ -227,41 +227,55 @@ async function queryAI({
   local = require("./local-ai"),
 }) {
   const mode = provider();
-  if (!image && mode !== "groq") {
-    try {
-      const r = await local.queryLocal({
-        question,
-        system: SYSTEM_PROMPT() + (context ? " " + context : ""),
-        tools: !noTools && wantsTools(question) ? TOOLS : [],
-        forcedTool: forcesTimer(question) ? "set_timer" : undefined,
-        signal,
-        onProgress,
-      });
-      if (r.toolCall)
-        return {
-          action: validateTool(r.toolCall),
-          model: r.model,
-          tokens: 0,
-          local: true,
-        };
-      if (typeof r.text !== "string" || !r.text.trim())
-        throw new Error("The on-device model returned no text. Try again.");
-      return { text: r.text, model: r.model, tokens: 0, local: true };
-    } catch (e) {
-      if (signal?.aborted) throw e;
-      // Fall back to Groq only when allowed and a key exists.
-      if (mode === "local" || !key)
-        throw new Error(
-          "On-device AI failed: " +
-            (e.message || e) +
-            (mode === "local" ? "" : " Add a Groq key in Settings as a fallback."),
-        );
-    }
-  }
   if (image && mode === "local")
     throw new Error(
-      "Screen analysis needs a vision model, and the on-device engine has none yet. Set DRER_AI=auto to send screens to Groq.",
+      "Screen analysis needs a vision model, and the on-device engine has none yet. Set DRER_AI=auto or groq to send screens to Groq.",
     );
+  // "auto" prefers Groq when a key is set (much better answers), and uses the
+  // on-device model otherwise or when Groq is unreachable. "local" never uses
+  // the network; "groq" never uses the on-device model.
+  if (mode === "groq" || image || (mode === "auto" && key)) {
+    try {
+      return await queryGroq({ key, model, question, image, signal, context, noTools });
+    } catch (e) {
+      if (signal?.aborted || mode === "groq" || image) throw e;
+      // auto: Groq failed, so answer on-device instead of failing the request.
+    }
+  }
+  try {
+    return await queryOnDevice({ question, signal, onProgress, noTools, context, local });
+  } catch (e) {
+    if (signal?.aborted) throw e;
+    throw new Error(
+      "On-device AI failed: " +
+        (e.message || e) +
+        (mode === "local" || !key ? "" : " Groq is also unavailable."),
+    );
+  }
+}
+
+async function queryOnDevice({ question, signal, onProgress, noTools, context, local }) {
+  const r = await local.queryLocal({
+    question,
+    system: SYSTEM_PROMPT() + (context ? " " + context : ""),
+    tools: !noTools && wantsTools(question) ? TOOLS : [],
+    forcedTool: forcesTimer(question) ? "set_timer" : undefined,
+    signal,
+    onProgress,
+  });
+  if (r.toolCall)
+    return {
+      action: validateTool(r.toolCall),
+      model: r.model,
+      tokens: 0,
+      local: true,
+    };
+  if (typeof r.text !== "string" || !r.text.trim())
+    throw new Error("The on-device model returned no text. Try again.");
+  return { text: r.text, model: r.model, tokens: 0, local: true };
+}
+
+async function queryGroq({ key, model, question, image, signal, context, noTools }) {
   if (!key)
     throw new Error(
       "Add your Groq API key in Settings for screen analysis. Chat, timers, alarms, notes, and the habit-tracker starter work on-device without a key.",
@@ -337,4 +351,5 @@ async function queryAI({
     throw new Error("The model returned no text. Try again.");
   return { text, model, tokens: data.usage?.total_tokens || 0 };
 }
+
 module.exports = { queryAI, DEFAULT_MODEL, validateTool, TOOLS };
