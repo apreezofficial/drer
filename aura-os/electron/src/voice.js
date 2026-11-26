@@ -287,17 +287,10 @@ class VoiceService {
       this.child.stdin.write('{"muted":false}\n');
     else this.listen();
   }
+  // A sample never waits on a stale flag: stop any speech already playing and speak.
   async preview() {
-    if (this.processing) throw new Error("Wait for the current voice request.");
-    this.processing = true;
-    this.pauseListener();
-    try {
-      await this.speak(this.greeting());
-    } finally {
-      await new Promise((resolve) => setTimeout(resolve, 120));
-      this.processing = false;
-      this.resumeListener();
-    }
+    this.speaker?.kill("SIGTERM");
+    await this.speak(this.greeting());
   }
   async heard(text) {
     if (!this.enabled || this.processing) return;
